@@ -1,0 +1,133 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-06T17:06:00+05:30",
+  "title": "Design System: BIS Intelligence",
+  "extensions": {
+    "colorMeta": {
+      "dossier-navy": {
+        "role": "primary",
+        "displayName": "Dossier Navy",
+        "canonical": "#0e315e",
+        "tonalRamp": ["#061529", "#0a274b", "#0e315e", "#28517f", "#527aa5", "#89a7c8", "#c2d4e6", "#edf4fa"]
+      },
+      "saffron-signal": {
+        "role": "secondary",
+        "displayName": "Saffron Signal",
+        "canonical": "#cc620b",
+        "tonalRamp": ["#351600", "#6c2e00", "#9b4705", "#cc620b", "#e88a37", "#f4b574", "#fbd9b4", "#fff4e8"]
+      },
+      "verified-green": {
+        "role": "tertiary",
+        "displayName": "Verified Green",
+        "canonical": "#18724b",
+        "tonalRamp": ["#06291a", "#0d4a31", "#18724b", "#36936a", "#65b28e", "#98ceb5", "#c9e7d9", "#eff9f4"]
+      },
+      "paper-background": {
+        "role": "neutral",
+        "displayName": "Paper Background",
+        "canonical": "#f7f8fa",
+        "tonalRamp": ["#1a1d22", "#343941", "#555c67", "#7b8490", "#a7aeb8", "#cdd2d9", "#e8ebef", "#f7f8fa"]
+      }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display", "purpose": "Two-line landing promise only." },
+      "headline": { "displayName": "Headline", "purpose": "Auth context and major feature introductions." },
+      "body": { "displayName": "Reading Body", "purpose": "Source-backed answers and explanatory copy." }
+    },
+    "shadows": [
+      { "name": "ambient-low", "value": "0 1px 2px rgb(15 38 68 / .06), 0 4px 16px rgb(15 38 68 / .04)", "purpose": "Input surfaces and interactive cards." },
+      { "name": "workspace-lift", "value": "0 20px 60px rgb(14 49 94 / .15)", "purpose": "Landing composer, evidence drawer, and modal-scale surfaces." }
+    ],
+    "motion": [
+      { "name": "state-fast", "value": "160ms ease", "purpose": "Color, border, and hover feedback." },
+      { "name": "sheet-enter", "value": "260ms cubic-bezier(.16, 1, .3, 1)", "purpose": "Evidence drawer and mobile sheet entrance." }
+    ],
+    "breakpoints": [
+      { "name": "wide", "value": "1180px" },
+      { "name": "tablet", "value": "980px" },
+      { "name": "mobile", "value": "720px" },
+      { "name": "compact", "value": "420px" }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "High-confidence next action with institutional weight.",
+      "html": "<button class=\"ds-btn-primary\">CHECK CERTIFICATION</button>",
+      "css": ".ds-btn-primary{height:40px;padding:0 15px;border:0;border-radius:8px;background:#0e315e;color:#fff;font:650 13.5px Geist,sans-serif;cursor:pointer;transition:background-color 160ms ease,transform 120ms ease}.ds-btn-primary:hover{background:#0a274b}.ds-btn-primary:focus-visible{outline:3px solid rgb(204 98 11 / .38);outline-offset:2px}.ds-btn-primary:active{transform:translateY(1px)}"
+    },
+    {
+      "name": "Secondary Button",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Inspectable supporting action.",
+      "html": "<button class=\"ds-btn-secondary\">VIEW STANDARD</button>",
+      "css": ".ds-btn-secondary{height:40px;padding:0 15px;border:1px solid #c8d1dc;border-radius:8px;background:#fff;color:#07182f;font:650 13.5px Geist,sans-serif;cursor:pointer;transition:background-color 160ms ease,border-color 160ms ease}.ds-btn-secondary:hover{background:#f1f4f7;border-color:#8fa6bf}.ds-btn-secondary:focus-visible{outline:3px solid rgb(204 98 11 / .38);outline-offset:2px}"
+    },
+    {
+      "name": "Compliance Input",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Plain-language product or account field.",
+      "html": "<label class=\"ds-field\"><span>Product description</span><input placeholder=\"Describe the product in your own words\"></label>",
+      "css": ".ds-field{display:grid;gap:7px;color:#07182f;font:650 11.5px Geist,sans-serif}.ds-field input{height:46px;padding:0 12px;border:1px solid #c8d1dc;border-radius:8px;background:#fff;color:#07182f;font:400 13px Geist,sans-serif;outline:0}.ds-field input:focus{border-color:#0e315e;box-shadow:0 0 0 3px rgb(14 49 94 / .1)}"
+    },
+    {
+      "name": "Citation Marker",
+      "kind": "chip",
+      "refersTo": "citation",
+      "description": "Inline route from a factual claim to its original source.",
+      "html": "<button class=\"ds-citation\" aria-label=\"Open source 1\">1</button>",
+      "css": ".ds-citation{min-width:21px;height:21px;padding:0 5px;border:1px solid #6d89a8;border-radius:5px;background:#e8f0f8;color:#0e315e;font:760 10px Geist,sans-serif;cursor:pointer}.ds-citation:hover{background:#0e315e;color:#fff}.ds-citation:focus-visible{outline:3px solid rgb(204 98 11 / .38);outline-offset:2px}"
+    },
+    {
+      "name": "Decision Panel",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Structured compliance factor with metadata and status.",
+      "html": "<section class=\"ds-decision\"><span>RECOMMENDED STANDARD</span><strong>IS 17803:2022</strong><small>Indian Standard</small></section>",
+      "css": ".ds-decision{padding:20px;border:1px solid #dce2e9;border-radius:12px;background:#fff;color:#101828;font-family:Geist,sans-serif}.ds-decision span{display:block;margin-bottom:14px;color:#7d8795;font-size:10px;font-weight:680}.ds-decision strong{display:block;color:#07182f;font-size:16px}.ds-decision small{display:block;margin-top:5px;color:#5d6879;font-size:11px}"
+    },
+    {
+      "name": "Verified Status",
+      "kind": "chip",
+      "refersTo": "card",
+      "description": "Compact verification state used beside source metadata.",
+      "html": "<span class=\"ds-verified\">SOURCE VERIFIED</span>",
+      "css": ".ds-verified{min-height:25px;display:inline-flex;align-items:center;padding:0 8px;border-radius:999px;background:#e7f5ee;color:#18724b;font:680 10.5px Geist,sans-serif}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Verification Dossier",
+    "overview": "BIS Intelligence feels like a precise standards dossier made interactive. Warm paper surfaces, navy ink, thin document rules, clause markers, and restrained saffron signals make each answer inspectable and official while preserving the speed of a modern AI product.",
+    "keyCharacteristics": [
+      "Evidence-first hierarchy with clause-level citations.",
+      "Light, warm-neutral surfaces with high-contrast navy typography.",
+      "Dense metadata only where it supports a decision.",
+      "English and Hindi interfaces with script-appropriate typography.",
+      "Responsive evidence drawers and vertically stacked workflows on small screens."
+    ],
+    "rules": [
+      { "name": "Evidence Color", "body": "Navy identifies authoritative actions and citations; semantic colors describe state.", "section": "colors" },
+      { "name": "Saffron Scarcity", "body": "Saffron appears only when the user must act or when applicability needs attention.", "section": "colors" },
+      { "name": "Direct Heading", "body": "Begin with the actual page or decision title. Do not add decorative uppercase kickers above headings.", "section": "typography" },
+      { "name": "Document Edge", "body": "Prefer a crisp border and a change in paper tone before adding elevation.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do put the direct compliance answer before supporting detail.",
+      "Do attach material claims to small, keyboard-accessible citation markers.",
+      "Do use borders, paper tones, and spacing to explain structure.",
+      "Do keep uncertainty visible with calibrated status language and one clear next action.",
+      "Do verify English and Hindi layouts at the same responsive widths."
+    ],
+    "donts": [
+      "Don't introduce generic chat bubbles, decorative AI gradients, or neon accents.",
+      "Don't use saffron as a general brand fill or decorative highlight.",
+      "Don't place every metadata field in a separate floating card.",
+      "Don't hide the evidence route behind an unlabeled icon.",
+      "Don't force authentication before a user can ask a basic standards question."
+    ]
+  }
+}

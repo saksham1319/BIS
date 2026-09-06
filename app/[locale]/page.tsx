@@ -1,4 +1,4 @@
-import { BISIntelligence } from "./bis-intelligence";
+import { BISIntelligence } from "../bis-intelligence";
 
 export default function Home() {
   return <BISIntelligence />;

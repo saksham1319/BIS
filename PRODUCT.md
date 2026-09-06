@@ -41,6 +41,8 @@ Regulatory answers may depend on material, intended use, product construction, t
 - The interface includes loading, empty, error, unavailable-source, conflicting-source, and ambiguous-query states.
 - Desktop, tablet, and mobile web are first-class. On mobile, evidence opens as a bottom sheet or expandable drawer.
 - Google and email/OTP sign-in are supported without blocking basic guest questions.
+- Supabase provides browser/server clients, cookie-based SSR sessions, Google OAuth, and passwordless email verification. User-specific tables must use Row Level Security when persistence is added.
+- Locale-prefixed routes and message dictionaries support English and Hindi. Official document excerpts may remain in their published language while navigation and guidance adapt to the selected locale.
 
 ## Brand Commitments
 
@@ -50,7 +52,7 @@ The visual direction is light-first with white or warm-neutral surfaces, deep na
 
 ## Evidence on Hand
 
-The repository contains only the default Next.js starter. The detailed product brief supplies the confirmed navigation, example questions, required workflows, example stainless steel water bottle response, source panel structure, responsive rules, and required interaction states. No official BIS logo assets, live BIS documents, verified regulatory dataset, production authentication, or laboratory dataset were supplied. Demonstration regulatory values must therefore be clearly identified as illustrative in the prototype.
+The detailed product brief supplies the confirmed navigation, example questions, required workflows, example stainless steel water bottle response, source panel structure, responsive rules, and required interaction states. The authentication interaction and locale plumbing were adapted from the user-provided Sprinte project, while BIS Intelligence retains its own information architecture and visual language. No official BIS logo assets, live BIS documents, verified regulatory dataset, Supabase project credentials, or laboratory dataset were supplied. Demonstration regulatory values are therefore clearly identified as illustrative, and authentication remains ready for the project's public Supabase environment values.
 
 ## Product Principles
 
