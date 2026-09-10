@@ -1,0 +1,11 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "paths": {
+      "@/lib/bis/retrieval": ["/private/tmp/claude-501/-Users-vibrant-Desktop-Projects-bis/f9efb51b-f678-4e0d-834e-53d09f165515/scratchpad/stub/retrieval.ts"],
+      "@/*": ["./*"]
+    }
+  },
+  "include": ["next-env.d.ts", "components/views/**/*.ts", "components/views/**/*.tsx", "lib/bis/**/*.ts"]
+}
