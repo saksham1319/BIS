@@ -1,19 +1,24 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Noto_Sans_Devanagari } from "next/font/google";
+import { Geist, Geist_Mono, Noto_Sans_Devanagari, Noto_Sans_Tamil, Noto_Sans_Telugu, Noto_Sans_Kannada } from "next/font/google";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
-import { getMessages, setRequestLocale } from "next-intl/server";
+import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { routing } from "@/i18n/routing";
 import "../globals.css";
 
 const geistSans = Geist({ variable: "--font-geist-sans", subsets: ["latin"] });
 const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"] });
-const devanagari = Noto_Sans_Devanagari({ variable: "--font-devanagari", subsets: ["devanagari"], weight: "variable" });
+const devanagari = Noto_Sans_Devanagari({ variable: "--font-devanagari", subsets: ["devanagari"], weight: "variable", preload: false });
+const tamil = Noto_Sans_Tamil({ variable: "--font-tamil", subsets: ["tamil"], weight: "variable", preload: false });
+const telugu = Noto_Sans_Telugu({ variable: "--font-telugu", subsets: ["telugu"], weight: "variable", preload: false });
+const kannada = Noto_Sans_Kannada({ variable: "--font-kannada", subsets: ["kannada"], weight: "variable", preload: false });
 
-export const metadata: Metadata = {
-  title: "BIS Intelligence | Understand Standards. Simplify Compliance.",
-  description: "An AI-powered assistant for Indian Standards, BIS certification, testing laboratories, hallmarking and product compliance.",
-};
+export async function generateMetadata({ params }: LayoutProps<"/[locale]">): Promise<Metadata> {
+  const { locale } = await params;
+  if (!hasLocale(routing.locales, locale)) notFound();
+  const t = await getTranslations({ locale, namespace: "Metadata" });
+  return { title: t("title"), description: t("description") };
+}
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
@@ -27,7 +32,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
   const messages = await getMessages();
 
   return (
-    <html lang={locale} className={`${geistSans.variable} ${geistMono.variable} ${devanagari.variable} h-full antialiased`}>
+    <html lang={locale} dir="ltr" className={`${geistSans.variable} ${geistMono.variable} ${devanagari.variable} ${tamil.variable} ${telugu.variable} ${kannada.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <template
           dangerouslySetInnerHTML={{
@@ -41,7 +46,7 @@ FINISH: unreviewed and undocumented is unfinished; this build ends with the fini
 -->`,
           }}
         />
-        <NextIntlClientProvider messages={messages}>{children}</NextIntlClientProvider>
+        <NextIntlClientProvider locale={locale} messages={messages} timeZone="Asia/Kolkata">{children}</NextIntlClientProvider>
       </body>
     </html>
   );

@@ -11,6 +11,15 @@ import { createClient } from "@/lib/supabase/client";
 
 type AuthAttempt = { email: string; expiresAt: number };
 
+// Accept the digits produced by keyboards for each supported Indian script.
+function normalizeCode(value: string) {
+  return Array.from(value, (character) => {
+    const point = character.codePointAt(0)!;
+    const start = [0x0966, 0x0be6, 0x0c66, 0x0ce6].find((zero) => point >= zero && point <= zero + 9);
+    return start === undefined ? character : String(point - start);
+  }).join("").replace(/\D/g, "").slice(0, 6);
+}
+
 function formatTime(seconds: number) {
   const minutes = Math.floor(seconds / 60).toString().padStart(2, "0");
   const remainingSeconds = (seconds % 60).toString().padStart(2, "0");
@@ -135,10 +144,11 @@ export default function VerifyPage() {
                 autoComplete="one-time-code"
                 maxLength={6}
                 value={code}
-                onChange={(event) => { setCode(event.target.value.replace(/\D/g, "")); setError(""); }}
+                onChange={(event) => { setCode(normalizeCode(event.target.value)); setError(""); }}
                 aria-invalid={Boolean(error)}
+                aria-describedby={error ? "verification-error" : undefined}
               />
-              {error && <p className="auth-error" role="alert">{error}</p>}
+              {error && <p id="verification-error" className="auth-error" role="alert">{error}</p>}
               <button type="submit" className="button primary full auth-submit" disabled={pending !== null || !email}>
                 {pending === "verify" && <span className="auth-spinner light" />}
                 {pending === "verify" ? t("verifying") : t("verify")}

@@ -14,14 +14,15 @@ export function LanguageSwitcher({ className = "" }: { className?: string }) {
   const [pending, startTransition] = useTransition();
 
   function changeLocale(nextLocale: Locale) {
-    const search = window.location.search;
+    if (nextLocale === locale) return;
+    const { search, hash } = window.location;
     startTransition(() => {
-      router.replace(`${pathname}${search}`, { locale: nextLocale });
+      router.replace(`${pathname}${search}${hash}`, { locale: nextLocale, scroll: false });
     });
   }
 
   return (
-    <label className={`language-control ${className}`} aria-label={t("language")}>
+    <label className={`language-control ${className}`} aria-busy={pending}>
       <Globe size={16} aria-hidden="true" />
       <select
         value={locale}
@@ -30,9 +31,10 @@ export function LanguageSwitcher({ className = "" }: { className?: string }) {
         aria-label={t("language")}
       >
         {SUPPORTED_LOCALES.map((item) => (
-          <option key={item} value={item}>{LOCALE_NAMES[item]}</option>
+          <option key={item} value={item} lang={item}>{LOCALE_NAMES[item]}</option>
         ))}
       </select>
+      <span className="sr-only" role="status">{pending ? t("switchingLanguage") : ""}</span>
     </label>
   );
 }

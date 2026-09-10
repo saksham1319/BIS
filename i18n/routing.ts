@@ -8,5 +8,6 @@ export const routing = defineRouting({
   localeCookie: {
     name: "BIS_LOCALE",
     sameSite: "lax",
+    maxAge: 60 * 60 * 24 * 365,
   },
 });
