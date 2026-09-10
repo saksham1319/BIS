@@ -1,5 +1,5 @@
 ---
-name: BIS Intelligence
+name: BIS Sathi
 description: A calm, evidence-first interface for understanding Indian Standards and navigating BIS compliance.
 colors:
   dossier-navy: "#0e315e"
@@ -84,13 +84,13 @@ components:
     size: "21px"
 ---
 
-# Design System: BIS Intelligence
+# Design System: BIS Sathi
 
 ## Overview
 
 **Creative North Star: "The Verification Dossier"**
 
-BIS Intelligence feels like a precise standards dossier made interactive. Warm paper surfaces, navy ink, thin document rules, clause markers, and restrained saffron signals make each answer feel inspectable and official while preserving the speed of a modern AI product.
+BIS Sathi feels like a precise standards dossier made interactive. Warm paper surfaces, navy ink, thin document rules, clause markers, and restrained saffron signals make each answer feel inspectable and official while preserving the speed of a modern AI product.
 
 The interface stays calm even when the subject is complex. It presents a direct answer, the decision factors, the evidence, and the next action in that order. Authentication and localized routes use the same visual language so users never feel they have entered a separate consumer app.
 

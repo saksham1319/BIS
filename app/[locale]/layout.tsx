@@ -11,8 +11,12 @@ const geistMono = Geist_Mono({ variable: "--font-geist-mono", subsets: ["latin"]
 const devanagari = Noto_Sans_Devanagari({ variable: "--font-devanagari", subsets: ["devanagari"], weight: "variable" });
 
 export const metadata: Metadata = {
-  title: "BIS Intelligence | Understand Standards. Simplify Compliance.",
+  title: "BIS Sathi | Understand Standards. Simplify Compliance.",
   description: "An AI-powered assistant for Indian Standards, BIS certification, testing laboratories, hallmarking and product compliance.",
+  icons: {
+    icon: "/favicon.ico",
+    apple: "/apple-touch-icon.png",
+  },
 };
 
 export function generateStaticParams() {
@@ -32,7 +36,7 @@ export default async function LocaleLayout({ children, params }: LayoutProps<"/[
         <template
           dangerouslySetInnerHTML={{
             __html: `<!--
-THESIS: BIS Intelligence is a verification dossier where every compliance answer visibly connects to official evidence.
+THESIS: BIS Sathi is a verification dossier where every compliance answer visibly connects to official evidence.
 OWN-WORLD: Warm white paper, deep navy ink, saffron action signals, crisp document edges, restrained 12px panels, and clause-level source markers.
 STORY: Ask in plain language, understand the decision, inspect its basis, then continue through a clear compliance path.
 FIRST VIEWPORT: A concise promise occupies the left while a working source-aware query desk anchors the right and holds the primary action.

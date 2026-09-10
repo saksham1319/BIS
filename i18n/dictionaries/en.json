@@ -29,7 +29,7 @@
     "titleTwo": "Simplify compliance.",
     "description": "Ask about Indian Standards, certification, testing, laboratories and hallmarking in plain language.",
     "guestAccess": "No sign-in required for basic questions",
-    "workbenchKicker": "BIS Intelligence",
+    "workbenchKicker": "BIS Sathi",
     "workbenchTitle": "What do you need to understand?",
     "sourceAware": "Source-aware",
     "placeholder": "Ask anything about BIS...",
@@ -56,7 +56,7 @@
   },
   "Auth": {
     "eyebrow": "Secure BIS workspace",
-    "title": "Continue to BIS Intelligence",
+    "title": "Continue to BIS Sathi",
     "description": "Save product profiles, source-backed answers and compliance reports in one trusted workspace.",
     "google": "Continue with Google",
     "orEmail": "or use email",
@@ -72,7 +72,7 @@
     "benefitOne": "Keep every product assessment in one place",
     "benefitTwo": "Return to saved standards and source passages",
     "benefitThree": "Generate and share compliance reports",
-    "officialNote": "Authentication is handled securely through Supabase. BIS Intelligence never asks for a password."
+    "officialNote": "Authentication is handled securely through Supabase. BIS Sathi never asks for a password."
   },
   "Verify": {
     "eyebrow": "Email verification",
