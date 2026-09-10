@@ -1,52 +1,50 @@
 "use client";
 
 import {
-  ArrowLeft,
-  ArrowRight,
-  ArrowSquareOut,
-  ArrowUp,
-  ArrowsDownUp,
-  BookmarkSimple,
-  Books,
-  Buildings,
-  CaretDown,
-  CaretRight,
-  Certificate,
-  ChatTeardropDots,
-  Check,
-  CheckCircle,
-  ClipboardText,
-  ClockCounterClockwise,
-  Copy,
-  DiamondsFour,
-  DownloadSimple,
-  FilePdf,
-  Files,
-  Flask,
-  IdentificationBadge,
-  Info,
-  List,
-  MagnifyingGlass,
-  MapPin,
-  MapTrifold,
-  Microphone,
-  Moon,
-  NavigationArrow,
-  Package,
-  Paperclip,
-  Phone,
-  Plus,
-  Question,
-  SealCheck,
-  ShareNetwork,
-  ShieldCheck,
-  SidebarSimple,
-  SlidersHorizontal,
-  Sun,
-  UserCircle,
-  Warning,
-  WarningCircle,
-  X,
+    ArrowLeft,
+    ArrowRight,
+    ArrowSquareOut,
+    ArrowUp,
+    ArrowsDownUp,
+    BookmarkSimple,
+    Books,
+    Buildings,
+    CaretDown,
+    CaretRight,
+    Certificate,
+    ChatTeardropDots,
+    Check,
+    CheckCircle,
+    ClipboardText,
+    ClockCounterClockwise,
+    Copy,
+    DiamondsFour,
+    DownloadSimple,
+    FilePdf,
+    Files,
+    Flask,
+    IdentificationBadge,
+    Info,
+    List,
+    MagnifyingGlass,
+    MapPin,
+    MapTrifold,
+    Microphone,
+    NavigationArrow,
+    Package,
+    Paperclip,
+    Phone,
+    Plus,
+    Question,
+    SealCheck,
+    ShareNetwork,
+    ShieldCheck,
+    SidebarSimple,
+    SlidersHorizontal,
+    UserCircle,
+    Warning,
+    WarningCircle,
+    X,
 } from "@phosphor-icons/react";
 import type { Icon } from "@phosphor-icons/react";
 import { useFormatter, useLocale, useTranslations } from "next-intl";
@@ -57,15 +55,15 @@ import { useRouter } from "@/i18n/navigation";
 import { isLocale, LOCALE_NAMES } from "@/i18n/locales";
 
 type View =
-  | "assistant"
-  | "products"
-  | "standards"
-  | "certification"
-  | "labs"
-  | "hallmarking"
-  | "history"
-  | "reports"
-  | "dashboard";
+    | "assistant"
+    | "products"
+    | "standards"
+    | "certification"
+    | "labs"
+    | "hallmarking"
+    | "history"
+    | "reports"
+    | "dashboard";
 
 type NavKey = "assistant" | "products" | "standards" | "certification" | "labs" | "hallmarking" | "history" | "reports";
 type NavItem = { id: View; labelKey: NavKey; icon: Icon };
@@ -100,14 +98,14 @@ function updateWorkspaceLocation(view?: View) {
 
 
 const navItems: NavItem[] = [
-  { id: "assistant", labelKey: "assistant", icon: ChatTeardropDots },
-  { id: "products", labelKey: "products", icon: Package },
-  { id: "standards", labelKey: "standards", icon: Books },
-  { id: "certification", labelKey: "certification", icon: Certificate },
-  { id: "labs", labelKey: "labs", icon: Flask },
-  { id: "hallmarking", labelKey: "hallmarking", icon: DiamondsFour },
-  { id: "history", labelKey: "history", icon: ClockCounterClockwise },
-  { id: "reports", labelKey: "reports", icon: Files },
+    {id: "assistant", labelKey: "assistant", icon: ChatTeardropDots},
+    {id: "products", labelKey: "products", icon: Package},
+    {id: "standards", labelKey: "standards", icon: Books},
+    {id: "certification", labelKey: "certification", icon: Certificate},
+    {id: "labs", labelKey: "labs", icon: Flask},
+    {id: "hallmarking", labelKey: "hallmarking", icon: DiamondsFour},
+    {id: "history", labelKey: "history", icon: ClockCounterClockwise},
+    {id: "reports", labelKey: "reports", icon: Files},
 ];
 
 function useSources() {
@@ -461,15 +459,15 @@ function DashboardView({ onNavigate }: { onNavigate: (view: View) => void }) {
   return <div className="workspace-page dashboard-page"><PageHeading title={ws("yourComplianceWorkspace")} description={ws("continueRecentProductReviewsAndKeepImportantStandards")} action={<button type="button" className="button primary" onClick={() => onNavigate("products")}><Plus size={17} /> {ws("addProduct")}</button>} /><section className="dashboard-products"><div className="section-title-row"><div><h2>{ws("myProducts")}</h2><p>{ws("productsWithRecentComplianceActivity")}</p></div><button type="button" className="text-link" onClick={() => onNavigate("products")}>{ws("viewAll")} <ArrowRight size={15} /></button></div><div className="dashboard-product-list"><button type="button" onClick={() => onNavigate("products")}><span className="product-monogram"><Package size={22} aria-hidden="true" /></span><span><strong>{ws("stainlessSteelBottle")}</strong><small>{ws("certificationReviewRequired")}</small></span><span className="status attention">{ws("needsReview")}</span><CaretRight size={16} /></button><button type="button" onClick={preview}><span className="product-monogram alt"><Package size={22} aria-hidden="true" /></span><span><strong>{ws("electricalAdapter")}</strong><small>{ws("standardsIdentifiedCount", { count: 3 })}</small></span><span className="status complete">{ws("onTrack")}</span><CaretRight size={16} /></button></div></section><div className="dashboard-columns"><section><div className="section-title-row"><div><h2>{ws("recentQueries")}</h2></div></div><div className="mini-list"><button type="button" onClick={preview}>{ws("doINeedCertificationForAVacuumBottle")}<span>{ws("today")}</span></button><button type="button" onClick={preview}>{ws("testingForElectricalAdapters")}<span>{ws("yesterday")}</span></button><button type="button" onClick={preview}>{ws("hallmarkHUIDExplanation")}<span>{format.dateTime(new Date("2026-08-29T12:00:00+05:30"), { day: "numeric", month: "short", timeZone: "Asia/Kolkata" })}</span></button></div></section><section><div className="section-title-row"><div><h2>{ws("savedStandards")}</h2></div></div><div className="mini-list standards-mini"><button type="button" onClick={preview}><strong>IS 17803:2022</strong><span>{ws("vacuumFlasksAndBottles")}</span></button><button type="button" onClick={preview}><strong>IS 14756:2022</strong><span>{ws("stainlessSteelUtensils")}</span></button><button type="button" onClick={preview}><strong>IS 302-1:2008</strong><span>{ws("electricalApplianceSafety")}</span></button></div></section></div></div>;
 }
 
-function GenericContent({ view, onNavigate }: { view: View; onNavigate: (view: View) => void }) {
-  if (view === "products") return <ProductsView onNavigate={onNavigate} />;
-  if (view === "standards") return <StandardsView />;
-  if (view === "certification") return <CertificationView />;
-  if (view === "labs") return <LabsView />;
-  if (view === "hallmarking") return <HallmarkingView />;
-  if (view === "history") return <HistoryView />;
-  if (view === "reports") return <ReportsView />;
-  return <DashboardView onNavigate={onNavigate} />;
+function GenericContent({view, onNavigate}: { view: View; onNavigate: (view: View) => void }) {
+    if (view === "products") return <ProductsView onNavigate={onNavigate}/>;
+    if (view === "standards") return <StandardsView/>;
+    if (view === "certification") return <CertificationView/>;
+    if (view === "labs") return <LabsView/>;
+    if (view === "hallmarking") return <HallmarkingView/>;
+    if (view === "history") return <HistoryView/>;
+    if (view === "reports") return <ReportsView/>;
+    return <DashboardView onNavigate={onNavigate}/>;
 }
 
 function DocumentViewer({ sourceId, onClose }: { sourceId: string; onClose: () => void }) {
