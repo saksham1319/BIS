@@ -1,57 +1,48 @@
 "use client";
 
 import {
-    ArrowLeft,
     ArrowRight,
     ArrowSquareOut,
     ArrowUp,
-    ArrowsDownUp,
     BookmarkSimple,
     Books,
     Buildings,
-    CaretDown,
     CaretRight,
     Certificate,
     ChatTeardropDots,
     Check,
-    CheckCircle,
     ClipboardText,
     ClockCounterClockwise,
-    Copy,
     DiamondsFour,
-    DownloadSimple,
     FilePdf,
     Files,
     Flask,
     IdentificationBadge,
-    Info,
     List,
     MagnifyingGlass,
-    MapPin,
-    MapTrifold,
-    Microphone,
-    NavigationArrow,
     Package,
-    Paperclip,
-    Phone,
     Plus,
-    Question,
     SealCheck,
-    ShareNetwork,
     ShieldCheck,
     SidebarSimple,
-    SlidersHorizontal,
     UserCircle,
     Warning,
-    WarningCircle,
-    X,
 } from "@phosphor-icons/react";
 import type {Icon} from "@phosphor-icons/react";
-import {useTranslations} from "next-intl";
+import {useLocale, useTranslations} from "next-intl";
 import {FormEvent, useEffect, useRef, useState} from "react";
 import {Brand} from "@/components/brand";
 import {LanguageSwitcher} from "@/components/language-switcher";
 import {useRouter} from "@/i18n/navigation";
+import {ChatThread, EvidencePanel, useChat} from "@/components/assistant";
+import {
+    CertificationGuide,
+    DocumentViewer,
+    HallmarkingView,
+    LabsFinder,
+    ReportsView,
+    StandardsExplorer,
+} from "@/components/views";
 
 type View =
     | "assistant"
@@ -79,36 +70,6 @@ const navItems: NavItem[] = [
     {id: "hallmarking", labelKey: "hallmarking", icon: DiamondsFour},
     {id: "history", labelKey: "history", icon: ClockCounterClockwise},
     {id: "reports", labelKey: "reports", icon: Files},
-];
-
-const sources = [
-    {
-        id: "standard",
-        number: "IS 17803:2022",
-        type: "Indian Standard",
-        location: "Clauses 4.1 and 6",
-        title: "Stainless steel vacuum flask and bottle",
-        excerpt:
-            "The standard specifies material, construction, performance and marking requirements for domestic stainless steel vacuum flasks and bottles.",
-    },
-    {
-        id: "qco",
-        number: "QCO reference",
-        type: "Quality Control Order",
-        location: "Applicability check",
-        title: "Domestic stainless steel products",
-        excerpt:
-            "Certification applicability depends on the exact product construction, notified scope and the currently effective Quality Control Order.",
-    },
-    {
-        id: "manual",
-        number: "PM/IS 17803/1",
-        type: "Product Manual",
-        location: "Page 12",
-        title: "Scheme of inspection and testing",
-        excerpt:
-            "The product manual describes grouping, sampling, testing facilities and the records expected during conformity assessment.",
-    },
 ];
 
 function IconButton({label, children, onClick, className = ""}: {
@@ -161,6 +122,10 @@ function Landing({onEnter, onNavigate, onSignIn}: {
                     <button onClick={() => onNavigate("hallmarking")}>{navigation("hallmarking")}</button>
                 </nav>
                 <div className="header-actions">
+                    <span className="status complete" title="Grounded with Gemini 3.5 Flash">
+                        <span style={{width: 6, height: 6, borderRadius: "50%", background: "currentColor"}} />
+                        AI Connected
+                    </span>
                     <LanguageSwitcher/>
                     <button type="button" className="button secondary sign-in-top"
                             onClick={onSignIn}>{common("signIn")}</button>
@@ -179,7 +144,7 @@ function Landing({onEnter, onNavigate, onSignIn}: {
                             <span>{t("guestAccess")}</span></div>
                     </div>
 
-                    <div className="hero-workbench" aria-label="Ask BIS Sathi">
+                    <div className="hero-workbench" aria-label="Ask BIS Saathi">
                         <div className="workbench-header">
                             <div><strong>{t("workbenchTitle")}</strong></div>
                             <span className="verified-chip"><SealCheck size={15}
@@ -191,10 +156,9 @@ function Landing({onEnter, onNavigate, onSignIn}: {
                                       onChange={(event) => setQuestion(event.target.value)}
                                       placeholder={t("placeholder")} rows={3}/>
                             <div className="composer-footer">
-                                <div className="composer-tools"><IconButton label="Attach a product document"><Paperclip
-                                    size={20}/></IconButton><span
+                                <div className="composer-tools"><span
                                     className="composer-hint">{t("describeProduct")}</span></div>
-                                <button type="submit" className="send-button" aria-label="Ask BIS Sathi"><ArrowUp
+                                <button type="submit" className="send-button" aria-label="Ask BIS Saathi"><ArrowUp
                                     size={20} weight="bold"/></button>
                             </div>
                         </form>
@@ -305,201 +269,16 @@ function AppTopbar({title, onMenu, onSignIn}: {
     return <header className="app-topbar">
         <div className="topbar-left"><IconButton label="Open navigation" onClick={onMenu}
                                                  className="mobile-menu-button"><List size={21}/></IconButton><span
-            className="breadcrumb">{t("workspace")}</span><CaretRight size={13}/><strong>{title}</strong></div>
+            className="breadcrumb">{t("workspace")}</span><CaretRight size={13}/><strong>{title}</strong>
+            <span className="status complete" style={{marginLeft: 8}} title="Grounded with Gemini 3.5 Flash">
+                <span style={{width: 6, height: 6, borderRadius: "50%", background: "currentColor"}} />
+                AI Online
+            </span>
+        </div>
         <div className="topbar-actions"><LanguageSwitcher className="app-language"/>
             <button type="button" className="button compact secondary" onClick={onSignIn}>{common("signIn")}</button>
         </div>
     </header>;
-}
-
-function Citation({index, onClick}: { index: number; onClick: () => void }) {
-    return <button type="button" className="citation" onClick={onClick}
-                   aria-label={`Open source ${index}`}>{index}</button>;
-}
-
-function RetrievalState() {
-    const steps = ["Searching Indian Standards...", "Checking certification requirements...", "Verifying against BIS sources..."];
-    return <div className="retrieval-state" role="status" aria-live="polite">
-        <div className="retrieval-mark"><MagnifyingGlass size={21}/></div>
-        <div><strong>Building a source-backed answer</strong>
-            <div className="retrieval-steps">{steps.map((step, index) => <span key={step}
-                                                                               style={{animationDelay: `${index * 260}ms`}}><CheckCircle
-                size={15} weight={index === 0 ? "fill" : "regular"}/> {step}</span>)}</div>
-        </div>
-    </div>;
-}
-
-function AnswerCard({onCitation, onOpenView}: { onCitation: (id: string) => void; onOpenView: (view: View) => void }) {
-    return (
-        <article className="answer" aria-label="BIS Sathi answer">
-            <div className="answer-intro">
-                <div className="assistant-emblem"><SealCheck size={21} weight="fill"/></div>
-                <div>
-                    <div className="answer-byline">BIS Sathi <span>Illustrative assessment</span></div>
-                    <p>A stainless steel water bottle may fall under <strong>IS 17803:2022</strong>, depending on
-                        whether it is a vacuum-insulated domestic bottle. Certification should be checked against the
-                        exact product construction and current QCO scope. <Citation index={1}
-                                                                                    onClick={() => onCitation("standard")}/>
-                        <Citation index={2} onClick={() => onCitation("qco")}/></p></div>
-            </div>
-            <div className="decision-grid">
-                <section className="decision-block product-block"><span
-                    className="decision-label">Product identified</span>
-                    <div className="decision-with-icon"><Package size={22}/>
-                        <div><strong>Stainless steel water bottle</strong><small>Domestic drinkware</small></div>
-                    </div>
-                </section>
-                <section className="decision-block standard-block"><span
-                    className="decision-label">Recommended standard</span><strong className="standard-number">IS
-                    17803:2022</strong>
-                    <button type="button" className="inline-action" onClick={() => onCitation("standard")}>View
-                        standard <ArrowSquareOut size={15}/></button>
-                </section>
-                <section className="decision-block certification-block"><span
-                    className="decision-label">Certification</span><span className="status attention"><Warning size={15}
-                                                                                                               weight="fill"/> Applicability check required</span>
-                    <p>Confirm construction and notified scope before proceeding.</p></section>
-                <section className="decision-block scheme-block"><span
-                    className="decision-label">Applicable scheme</span>
-                    <div className="scheme-line"><span className="scheme-badge">Scheme-I</span>
-                        <button type="button" className="help-dot" aria-label="What is Scheme-I?"><Question size={14}/>
-                        </button>
-                    </div>
-                    <p>Product certification with testing and conformity assessment.</p></section>
-            </div>
-            <section className="answer-section">
-                <div className="section-title-row">
-                    <div><h3>Testing requirements</h3><p>Likely test groups under the product standard and manual.</p>
-                    </div>
-                    <Citation index={3} onClick={() => onCitation("manual")}/></div>
-                <div
-                    className="test-list">{["Material and workmanship", "Capacity and thermal performance", "Leakage and impact resistance"].map((test) =>
-                    <span key={test}><Check size={15} weight="bold"/> {test}</span>)}</div>
-            </section>
-            <section className="caveat"><Info size={20} weight="fill"/>
-                <div><strong>One detail can change this result</strong><p>Is the bottle vacuum-insulated, single-wall,
-                    or intended for a specific industrial use?</p></div>
-                <button type="button">Add detail</button>
-            </section>
-            <section className="next-steps">
-                <div className="section-title-row">
-                    <div><h3>Recommended next steps</h3><p>Move from identification to a verified compliance path.</p>
-                    </div>
-                </div>
-                <ol>
-                    <li><span>1</span>
-                        <div><strong>Confirm product construction</strong><small>Add insulation type, capacity and
-                            intended use.</small></div>
-                    </li>
-                    <li><span>2</span>
-                        <div><strong>Verify the current QCO</strong><small>Check whether mandatory certification
-                            applies.</small></div>
-                    </li>
-                    <li><span>3</span>
-                        <div><strong>Plan testing</strong><small>Match the required tests with a recognised lab.</small>
-                        </div>
-                    </li>
-                </ol>
-            </section>
-            <div className="answer-actions">
-                <button type="button" className="button primary" onClick={() => onOpenView("products")}>Save as
-                    product
-                </button>
-                <button type="button" className="button secondary" onClick={() => onOpenView("labs")}>Find laboratory
-                </button>
-                <button type="button" className="button ghost"><DownloadSimple size={17}/> Generate report</button>
-                <div className="answer-icon-actions"><IconButton label="Save answer"><BookmarkSimple
-                    size={18}/></IconButton><IconButton label="Share answer"><ShareNetwork size={18}/></IconButton>
-                </div>
-            </div>
-        </article>
-    );
-}
-
-function AssistantView({initialQuestion, loading, onAsk, onCitation, onOpenView}: {
-    initialQuestion: string;
-    loading: boolean;
-    onAsk: (query: string) => void;
-    onCitation: (id: string) => void;
-    onOpenView: (view: View) => void
-}) {
-    const [query, setQuery] = useState("");
-
-    function submit(event: FormEvent) {
-        event.preventDefault();
-        if (!query.trim()) return;
-        onAsk(query.trim());
-        setQuery("");
-    }
-
-    return (
-        <div className="conversation-scroll">
-            <div className="conversation">
-                <div className="conversation-heading">
-                    <div><h1>Compliance assistant</h1><p>Ask a product or BIS service question. Important claims include
-                        inspectable sources.</p></div>
-                    <span className="context-chip"><Package size={15}/> Product context active</span></div>
-                <div className="user-message"><span className="message-author">You</span><p>{initialQuestion}</p></div>
-                {loading ? <RetrievalState/> : <AnswerCard onCitation={onCitation} onOpenView={onOpenView}/>}</div>
-            <div className="sticky-composer-wrap">
-                <form className="app-composer" onSubmit={submit}><label htmlFor="follow-up" className="sr-only">Ask a
-                    follow-up question</label><textarea id="follow-up" value={query}
-                                                        onChange={(event) => setQuery(event.target.value)}
-                                                        placeholder="Ask a follow-up or describe another product..."
-                                                        rows={2}/>
-                    <div className="composer-footer">
-                        <div className="composer-tools"><IconButton label="Attach document"><Paperclip
-                            size={19}/></IconButton><IconButton label="Use microphone"><Microphone
-                            size={19}/></IconButton><span className="language-badge">EN</span></div>
-                        <button type="submit" className="send-button" aria-label="Send question"><ArrowUp size={19}
-                                                                                                          weight="bold"/>
-                        </button>
-                    </div>
-                </form>
-                <p className="ai-note">Verify final compliance decisions with the cited official documents.</p></div>
-        </div>
-    );
-}
-
-function EvidencePanel({selected, onSelect, onClose, onOpenDocument}: {
-    selected: string;
-    onSelect: (id: string) => void;
-    onClose: () => void;
-    onOpenDocument: () => void
-}) {
-    const activeSource = sources.find((source) => source.id === selected) ?? sources[0];
-    return (
-        <aside className="evidence-panel" aria-label="Sources and evidence">
-            <div className="evidence-header">
-                <div><strong>Sources</strong><span>3 sources verified</span></div>
-                <IconButton label="Close sources" onClick={onClose}><X size={18}/></IconButton></div>
-            <div className="source-tabs" role="tablist" aria-label="Answer sources">{sources.map((source, index) =>
-                <button type="button" role="tab" aria-selected={selected === source.id}
-                        className={selected === source.id ? "active" : ""} key={source.id}
-                        onClick={() => onSelect(source.id)}>{index + 1}</button>)}</div>
-            <div className="active-source">
-                <div className="source-document-icon"><FilePdf size={23} weight="duotone"/></div>
-                <span className="source-type">{activeSource.type}</span><h2>{activeSource.number}</h2><p
-                className="source-title">{activeSource.title}</p>
-                <div className="source-location"><IdentificationBadge size={17}/>
-                    <div><span>Relevant location</span><strong>{activeSource.location}</strong></div>
-                </div>
-                <div className="passage"><span>Relevant passage</span><p>{activeSource.excerpt}</p></div>
-                <button type="button" className="button primary full" onClick={onOpenDocument}>View highlighted
-                    passage <ArrowSquareOut size={17}/></button>
-                <button type="button" className="button secondary full"><Copy size={17}/> Copy citation</button>
-            </div>
-            <div className="source-list"><span>All evidence</span>{sources.map((source, index) => <button type="button"
-                                                                                                          key={source.id}
-                                                                                                          onClick={() => onSelect(source.id)}
-                                                                                                          className={selected === source.id ? "active" : ""}>
-                <span
-                    className="source-index">{index + 1}</span><span><strong>{source.number}</strong><small>{source.location}</small></span><CaretRight
-                size={15}/></button>)}</div>
-            <div className="source-provenance"><SealCheck size={17} weight="fill"/><p><strong>Source provenance</strong><span>Linked to an original BIS document record.</span>
-            </p></div>
-        </aside>
-    );
 }
 
 function PageHeading({title, description, action}: { title: string; description: string; action?: React.ReactNode }) {
@@ -616,249 +395,6 @@ const standards = [
     },
 ];
 
-function StandardsView() {
-    const [search, setSearch] = useState("");
-    const filtered = standards.filter((standard) => `${standard.number} ${standard.title} ${standard.area}`.toLowerCase().includes(search.toLowerCase()));
-    return (
-        <div className="workspace-page"><PageHeading title="Standards explorer"
-                                                     description="Search by IS number, product, keyword, industry or topic."/>
-            <div className="explorer-search"><MagnifyingGlass size={21}/><label htmlFor="standard-search"
-                                                                                className="sr-only">Search Indian
-                Standards</label><input id="standard-search" value={search}
-                                        onChange={(event) => setSearch(event.target.value)}
-                                        placeholder="Search Indian Standards, products or topics"/><kbd>⌘ K</kbd></div>
-            <div className="filter-bar">
-                <button type="button" className="active">All standards</button>
-                <button type="button">Products</button>
-                <button type="button">Industry</button>
-                <button type="button">Topic</button>
-                <span className="filter-spacer"/>
-                <button type="button"><SlidersHorizontal size={16}/> Filters</button>
-                <button type="button"><ArrowsDownUp size={16}/> Relevance</button>
-            </div>
-            <div className="results-summary"><strong>{filtered.length} standards</strong><span>Illustrative search results</span>
-            </div>
-            <div className="standards-results">{filtered.length ? filtered.map((standard) => <article
-                    className="standard-result" key={standard.number}>
-                    <div className="standard-file"><FilePdf size={24} weight="duotone"/></div>
-                    <div className="standard-result-main">
-                        <div className="standard-result-meta"><span>{standard.match}</span><span>{standard.area}</span>
-                        </div>
-                        <h2>{standard.number}</h2><p>{standard.title}</p>
-                        <div className="standard-submeta"><span><CheckCircle size={15}
-                                                                             weight="fill"/> {standard.status}</span><span>{standard.revised}</span><span>3 related standards</span>
-                        </div>
-                    </div>
-                    <div className="standard-result-actions"><IconButton label={`Save ${standard.number}`}><BookmarkSimple
-                        size={18}/></IconButton>
-                        <button type="button" className="button secondary">View standard</button>
-                    </div>
-                </article>) :
-                <div className="empty-state"><MagnifyingGlass size={28}/><h2>No matching standards</h2><p>Try a product
-                    name, industry term or a shorter keyword.</p>
-                    <button type="button" className="button secondary" onClick={() => setSearch("")}>Clear search
-                    </button>
-                </div>}</div>
-        </div>
-    );
-}
-
-function CertificationView() {
-    const steps = [
-        {
-            name: "Confirm applicability",
-            description: "Match the product to the standard and current QCO.",
-            state: "complete"
-        },
-        {
-            name: "Prepare product details",
-            description: "Confirm construction, variants and manufacturing location.",
-            state: "current"
-        },
-        {name: "Complete testing", description: "Test required samples at a recognised laboratory.", state: "upcoming"},
-        {
-            name: "Submit application",
-            description: "Upload the application, documents and test reports.",
-            state: "upcoming"
-        },
-        {name: "Factory assessment", description: "Demonstrate manufacturing and testing controls.", state: "upcoming"},
-        {
-            name: "Licence decision",
-            description: "Address observations and receive the certification decision.",
-            state: "upcoming"
-        },
-    ];
-    return <div className="workspace-page certification-page"><PageHeading title="Certification guidance"
-                                                                           description="A clear route through product certification, from scope check to licence."
-                                                                           action={<button type="button"
-                                                                                           className="button secondary">
-                                                                               <DownloadSimple size={17}/> Checklist
-                                                                           </button>}/>
-        <div className="cert-summary">
-            <div><span>Likely scheme</span><strong>Scheme-I</strong><p>Product certification based on conformity to an
-                Indian Standard.</p></div>
-            <div><span>Current position</span><strong>Prepare product details</strong><p>One product clarification is
-                needed before testing.</p></div>
-            <div><span>Attention</span><strong className="attention-text">QCO scope</strong><p>Verify the currently
-                effective order before applying.</p></div>
-        </div>
-        <div className="cert-layout">
-            <section className="timeline-section">
-                <div className="section-title-row">
-                    <div><h2>Your certification path</h2><p>Status updates as the product moves through each
-                        requirement.</p></div>
-                </div>
-                <ol className="cert-timeline">{steps.map((step) => <li className={step.state} key={step.name}><span
-                    className="timeline-marker">{step.state === "complete" ?
-                    <Check size={16} weight="bold"/> : step.state === "current" ? <span/> : null}</span>
-                    <div><strong>{step.name}</strong><p>{step.description}</p>{step.state === "current" &&
-                        <button type="button" className="inline-action">Continue this step <ArrowRight size={15}/>
-                        </button>}</div>
-                    <span
-                        className={`status ${step.state}`}>{step.state === "complete" ? "Completed" : step.state === "current" ? "Current" : "Upcoming"}</span>
-                </li>)}</ol>
-            </section>
-            <aside className="requirements-panel"><h3>Prepare these documents</h3>
-                <div className="requirement-progress"><strong>2 of 6
-                    ready</strong><span>Based on your saved product</span></div>
-                {["Manufacturing process flow", "Factory layout", "Machinery details", "Test equipment list", "Quality control plan", "Authorisation documents"].map((item, index) =>
-                    <label key={item}><input type="checkbox" defaultChecked={index < 2}/><span>{item}</span></label>)}
-                <button type="button" className="button secondary full">View document guide</button>
-            </aside>
-        </div>
-    </div>;
-}
-
-const labs = [
-    {
-        name: "National Test House",
-        location: "Ghaziabad, Uttar Pradesh",
-        distance: "24 km",
-        standards: ["IS 17803", "IS 14756"],
-        tests: ["Thermal performance", "Leakage", "Impact"],
-        verified: "Recognised scope checked"
-    },
-    {
-        name: "Shriram Institute for Industrial Research",
-        location: "Delhi",
-        distance: "31 km",
-        standards: ["IS 17803", "IS 9845"],
-        tests: ["Material analysis", "Migration", "Performance"],
-        verified: "Recognition record available"
-    },
-    {
-        name: "Central Testing Laboratory",
-        location: "Noida, Uttar Pradesh",
-        distance: "38 km",
-        standards: ["IS 14756"],
-        tests: ["Chemical analysis", "Construction"],
-        verified: "Scope requires confirmation"
-    },
-];
-
-function LabsView() {
-    return <div className="workspace-page labs-page"><PageHeading title="Testing laboratories"
-                                                                  description="Find recognised laboratories by product, standard, test and location."/>
-        <div className="lab-search-panel"><label htmlFor="lab-search">What product do you need tested?</label>
-            <div className="lab-search-row"><MagnifyingGlass size={21}/><input id="lab-search"
-                                                                               defaultValue="Stainless steel water bottle"/>
-                <button type="button" className="button primary">Find laboratories</button>
-            </div>
-            <div className="lab-filters">
-                <button type="button"><MapPin size={16}/> Delhi NCR <CaretDown size={13}/></button>
-                <button type="button"><Books size={16}/> IS 17803 <CaretDown size={13}/></button>
-                <button type="button"><Flask size={16}/> All tests <CaretDown size={13}/></button>
-                <button type="button"><SlidersHorizontal size={16}/> More filters</button>
-            </div>
-        </div>
-        <div className="lab-result-layout">
-            <div className="lab-list">
-                <div className="results-summary"><strong>14 matching laboratories</strong><span>Sorted by capability match</span>
-                </div>
-                {labs.map((lab, index) => <article className="lab-result" key={lab.name}>
-                    <div className="lab-heading"><span className="lab-logo"><Buildings size={22}/></span>
-                        <div><h2>{lab.name}</h2><p><MapPin size={15}/> {lab.location} <span>{lab.distance}</span></p>
-                        </div>
-                        <label className="compare-check"><input type="checkbox"/> Compare</label></div>
-                    <div className="lab-capabilities">
-                        <div><span>Recognised standards</span><p>{lab.standards.map((item) => <strong
-                            key={item}>{item}</strong>)}</p></div>
-                        <div><span>Available tests</span>
-                            <p>{lab.tests.slice(0, 2).join(", ")}{lab.tests.length > 2 ? ` +${lab.tests.length - 2}` : ""}</p>
-                        </div>
-                    </div>
-                    <div className={`verification-line ${index === 2 ? "caution" : ""}`}>{index === 2 ?
-                        <WarningCircle size={16}/> : <SealCheck size={16} weight="fill"/>} {lab.verified}</div>
-                    <div className="lab-actions">
-                        <button type="button" className="button secondary">View lab</button>
-                        <button type="button" className="button ghost"><Phone size={16}/> Contact</button>
-                        <button type="button" className="button ghost"><NavigationArrow size={16}/> Directions</button>
-                    </div>
-                </article>)}</div>
-            <div className="lab-map" aria-label="Map preview"><MapTrifold size={40} weight="duotone"/><strong>Map
-                view</strong><p>Three matching laboratories are visible in Delhi NCR.</p>
-                <div className="map-pin pin-one"><span>1</span></div>
-                <div className="map-pin pin-two"><span>2</span></div>
-                <div className="map-pin pin-three"><span>3</span></div>
-            </div>
-        </div>
-    </div>;
-}
-
-function HallmarkingView() {
-    const entries = [
-        {
-            title: "Verify hallmark information",
-            description: "Understand the marks on a hallmarked article and check its HUID details.",
-            icon: SealCheck,
-            action: "Verify hallmark"
-        },
-        {
-            title: "Understand hallmarking",
-            description: "Learn what hallmarking covers and what each mark means.",
-            icon: Info,
-            action: "Read the guide"
-        },
-        {
-            title: "Find a hallmarking centre",
-            description: "Locate a recognised Assaying and Hallmarking Centre near you.",
-            icon: MapPin,
-            action: "Find a centre"
-        },
-        {
-            title: "Consumer guidance",
-            description: "Know what to check before buying and how to raise a concern.",
-            icon: ShieldCheck,
-            action: "View guidance"
-        },
-    ];
-    return <div className="workspace-page hallmarking-page"><PageHeading title="Hallmarking, made clearer"
-                                                                         description="Simple guidance for consumers, jewellers and hallmarking services."/>
-        <section className="hallmark-verify">
-            <div><DiamondsFour size={34} weight="duotone"/><h2>Check a hallmarked article</h2><p>Enter the six-character
-                HUID printed on the article.</p></div>
-            <form onSubmit={(event) => event.preventDefault()}><label htmlFor="huid">HUID number</label>
-                <div><input id="huid" placeholder="For example, AB12CD" maxLength={6}/>
-                    <button type="submit" className="button primary">Verify HUID</button>
-                </div>
-                <small>Use the BIS Care app or official service for a final verification.</small></form>
-        </section>
-        <div className="hallmark-entry-grid">{entries.map((entry) => {
-            const EntryIcon = entry.icon;
-            return <button type="button" key={entry.title}><span className="entry-icon"><EntryIcon
-                size={25}/></span><span><strong>{entry.title}</strong><small>{entry.description}</small><em>{entry.action}
-                <ArrowRight size={15}/></em></span></button>;
-        })}</div>
-        <section className="hallmark-anatomy">
-            <div><h2>What a hallmark tells you</h2><p>Three marks help identify purity, the BIS system and the article
-                record.</p></div>
-            <div className="hallmark-marks"><span><SealCheck size={24} weight="fill"/><strong>BIS mark</strong><small>Standards conformity system</small></span><span><strong
-                className="purity-mark">22K916</strong><small>Purity and fineness</small></span><span><IdentificationBadge
-                size={24}/><strong>HUID</strong><small>Unique article identifier</small></span></div>
-        </section>
-    </div>;
-}
-
 function HistoryView() {
     const items = [
         {question: exampleQuestion, date: "Today, 10:42", type: "Product compliance"},
@@ -879,31 +415,6 @@ function HistoryView() {
             <ChatTeardropDots size={19}/>}</span><span
             className="saved-copy"><strong>{item.question}</strong><small>{item.type} <span>•</span> {item.date}</small></span><CaretRight
             size={17}/></button>)}</div>
-    </div>;
-}
-
-function ReportsView() {
-    return <div className="workspace-page"><PageHeading title="Documents and reports"
-                                                        description="Export evidence-backed compliance summaries for your team."
-                                                        action={<button type="button" className="button primary"><Plus
-                                                            size={17}/> New report</button>}/>
-        <div className="report-feature">
-            <div className="report-preview"><FilePdf size={38} weight="duotone"/><span>BIS Sathi</span><strong>Product
-                compliance brief</strong><p>Stainless steel water bottle</p>
-                <div className="report-lines"><i/><i/><i/></div>
-            </div>
-            <div className="report-copy"><h2>Generate a review-ready compliance brief</h2><p>Combine the product
-                profile, recommended standards, source citations, open questions and next steps in one document.</p>
-                <div className="report-includes"><span><Check size={15}/> Clause-level citations</span><span><Check
-                    size={15}/> Compliance path</span><span><Check size={15}/> Open decision log</span><span><Check
-                    size={15}/> Laboratory shortlist</span></div>
-                <button type="button" className="button primary"><DownloadSimple size={17}/> Generate report</button>
-            </div>
-        </div>
-        <section className="recent-reports"><h2>Recent reports</h2>
-            <div className="empty-state compact-empty"><Files size={26}/><h3>No reports yet</h3><p>Create a report from
-                a saved product or assistant answer.</p></div>
-        </section>
     </div>;
 }
 
@@ -955,78 +466,43 @@ function DashboardView({onNavigate}: { onNavigate: (view: View) => void }) {
     </div>;
 }
 
-function GenericContent({view, onNavigate}: { view: View; onNavigate: (view: View) => void }) {
+type DocumentTarget = { sourceId?: string; standardId?: string; clauseId?: string };
+
+function GenericContent({view, onNavigate, onOpenDocument}: {
+    view: View;
+    onNavigate: (view: View) => void;
+    onOpenDocument: (target: DocumentTarget) => void;
+}) {
     if (view === "products") return <ProductsView onNavigate={onNavigate}/>;
-    if (view === "standards") return <StandardsView/>;
-    if (view === "certification") return <CertificationView/>;
-    if (view === "labs") return <LabsView/>;
+    if (view === "standards") return <StandardsExplorer
+        onOpenDocument={(standardId, clauseId) => onOpenDocument({standardId, clauseId})}/>;
+    if (view === "certification") return <CertificationGuide/>;
+    if (view === "labs") return <LabsFinder/>;
     if (view === "hallmarking") return <HallmarkingView/>;
     if (view === "history") return <HistoryView/>;
     if (view === "reports") return <ReportsView/>;
     return <DashboardView onNavigate={onNavigate}/>;
 }
 
-function DocumentViewer({sourceId, onClose}: { sourceId: string; onClose: () => void }) {
-    const source = sources.find((item) => item.id === sourceId) ?? sources[0];
-    return <div className="modal-backdrop document-backdrop" role="presentation" onMouseDown={onClose}>
-        <section className="document-viewer" role="dialog" aria-modal="true"
-                 aria-label={`${source.number} document viewer`} onMouseDown={(event) => event.stopPropagation()}>
-            <header className="document-toolbar">
-                <div><IconButton label="Close document" onClick={onClose}><ArrowLeft size={20}/></IconButton>
-                    <div><strong>{source.number}</strong><span>{source.title}</span></div>
-                </div>
-                <div className="document-tools">
-                    <button type="button"><MagnifyingGlass size={17}/> Search</button>
-                    <button type="button">100% <CaretDown size={12}/></button>
-                    <button type="button"><Copy size={17}/> Copy citation</button>
-                    <button type="button"><ArrowSquareOut size={17}/> Original source</button>
-                    <IconButton label="Close document" onClick={onClose}><X size={19}/></IconButton></div>
-            </header>
-            <div className="document-body">
-                <aside className="document-pages"><span>Pages</span>{[10, 11, 12, 13].map((page) => <button
-                    type="button" className={page === 12 ? "active" : ""} key={page}><span
-                    className="page-thumb"><i/><i/><i/><i/></span><small>{page}</small></button>)}</aside>
-                <main className="document-canvas">
-                    <div className="pdf-page">
-                        <div className="pdf-page-header"><span>IS 17803:2022</span><span>Indian Standard</span></div>
-                        <h2>Stainless steel vacuum flask and bottle</h2><p className="pdf-intro">Requirements and
-                        methods of test</p><h3>4 Materials and construction</h3><p><strong>4.1</strong> The body and
-                        components in contact with food or beverages shall be made from material suitable for the
-                        declared use.</p>
-                        <div className="highlighted-clause"><span className="highlight-tag">Cited in answer</span><p>
-                            <strong>4.2</strong> Stainless steel vacuum flasks and bottles shall meet the specified
-                            construction, performance and marking requirements for the applicable product type.</p>
-                        </div>
-                        <p><strong>4.3</strong> All components shall be free from defects that can affect safe use or
-                            serviceability.</p><h3>6 Performance requirements</h3><p>Products shall be tested for
-                        capacity, thermal performance, leakage and resistance as specified in the relevant test
-                        methods.</p>
-                        <div className="pdf-page-footer"><span>Illustrative document content</span><span>12</span></div>
-                    </div>
-                </main>
-                <aside className="document-context"><span>Evidence context</span><h3>Why this passage matters</h3>
-                    <p>This clause narrows the standard to the construction and intended use of the bottle described in
-                        the question.</p>
-                    <div><small>Used for claim</small><strong>“IS 17803:2022 may apply.”</strong></div>
-                    <button type="button" className="button secondary full"><Copy size={16}/> Copy citation</button>
-                </aside>
-            </div>
-        </section>
-    </div>;
-}
-
 export function BISIntelligence() {
     const router = useRouter();
+    const locale = useLocale();
     const navigation = useTranslations("Navigation");
+    const {messages, status, streamingText, pendingSources, isLoading, error, ask, stop} = useChat();
     const [screen, setScreen] = useState<"landing" | "app">("landing");
     const [view, setView] = useState<View>("assistant");
-    const [question, setQuestion] = useState(exampleQuestion);
-    const [loading, setLoading] = useState(false);
     const [sourceOpen, setSourceOpen] = useState(true);
-    const [selectedSource, setSelectedSource] = useState("standard");
-    const [documentOpen, setDocumentOpen] = useState(false);
+    const [selectedSource, setSelectedSource] = useState<string | null>(null);
+    const [documentTarget, setDocumentTarget] = useState<DocumentTarget | null>(null);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+    // Derive the active source rather than syncing it in an effect: when a new answer
+    // replaces the evidence list, any stale selection falls back to the first source.
+    const sources = pendingSources;
+    const activeSource = sources.some((source) => source.id === selectedSource)
+        ? selectedSource
+        : sources[0]?.id ?? null;
 
     useEffect(() => {
         const frame = window.requestAnimationFrame(() => {
@@ -1039,18 +515,12 @@ export function BISIntelligence() {
         });
         return () => window.cancelAnimationFrame(frame);
     }, []);
-    useEffect(() => {
-        if (!loading) return;
-        const timer = window.setTimeout(() => setLoading(false), 1750);
-        return () => window.clearTimeout(timer);
-    }, [loading, question]);
 
     function enterAssistant(nextQuestion: string) {
-        setQuestion(nextQuestion);
         setScreen("app");
         setView("assistant");
         setSourceOpen(window.innerWidth > 720);
-        setLoading(true);
+        void ask(nextQuestion.trim() || exampleQuestion, locale);
     }
 
     function navigate(nextView: View) {
@@ -1060,8 +530,8 @@ export function BISIntelligence() {
         if (nextView !== "assistant") setSourceOpen(false);
     }
 
-    function openCitation(id: string) {
-        setSelectedSource(id);
+    function openCitation(sourceId: string) {
+        setSelectedSource(sourceId);
         setSourceOpen(true);
     }
 
@@ -1098,15 +568,20 @@ export function BISIntelligence() {
                                                          onSignIn={openAuth}/>
                         <div className={`workspace ${view === "assistant" && sourceOpen ? "with-evidence" : ""}`}>
                             <main className="workspace-main">{view === "assistant" ?
-                                <AssistantView initialQuestion={question} loading={loading} onAsk={enterAssistant}
-                                               onCitation={openCitation} onOpenView={navigate}/> :
-                                <GenericContent view={view} onNavigate={navigate}/>}</main>
+                                <ChatThread messages={messages} status={status} streamingText={streamingText}
+                                            isLoading={isLoading} error={error} onAsk={enterAssistant} onStop={stop}
+                                            onCitation={openCitation}
+                                            onOpenView={(nextView) => navigate(nextView as View)}/> :
+                                <GenericContent view={view} onNavigate={navigate}
+                                                onOpenDocument={setDocumentTarget}/>}</main>
                             {view === "assistant" && sourceOpen &&
-                                <EvidencePanel selected={selectedSource} onSelect={setSelectedSource}
+                                <EvidencePanel sources={sources} selected={activeSource} onSelect={setSelectedSource}
                                                onClose={() => setSourceOpen(false)}
-                                               onOpenDocument={() => setDocumentOpen(true)}/>}{view === "assistant" && !sourceOpen && !loading &&
-                            <button type="button" className="floating-sources-button"
-                                    onClick={() => setSourceOpen(true)}><Files size={17}/> 3 sources</button>}</div>
+                                               onOpenDocument={(source) => setDocumentTarget({sourceId: source.id})}/>}
+                            {view === "assistant" && !sourceOpen && sources.length > 0 &&
+                                <button type="button" className="floating-sources-button"
+                                        onClick={() => setSourceOpen(true)}><Files size={17}/> {sources.length} {sources.length === 1 ? "source" : "sources"}
+                                </button>}</div>
                     </div>
                     <nav className="mobile-bottom-nav"
                          aria-label="Mobile navigation">{[navItems[0], navItems[1], navItems[2], navItems[4]].map((item) => {
@@ -1120,7 +595,10 @@ export function BISIntelligence() {
                             size={20}/><span>{navigation("more")}</span></button>
                     </nav>
                 </div>}
-            {documentOpen && <DocumentViewer sourceId={selectedSource} onClose={() => setDocumentOpen(false)}/>}
+            {documentTarget && <DocumentViewer sourceId={documentTarget.sourceId}
+                                               standardId={documentTarget.standardId}
+                                               clauseId={documentTarget.clauseId}
+                                               onClose={() => setDocumentTarget(null)}/>}
         </>
     );
 }

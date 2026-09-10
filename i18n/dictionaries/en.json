@@ -29,15 +29,15 @@
     "titleTwo": "Simplify compliance.",
     "description": "Ask about Indian Standards, certification, testing, laboratories and hallmarking in plain language.",
     "guestAccess": "No sign-in required for basic questions",
-    "workbenchKicker": "BIS Sathi",
+    "workbenchKicker": "BIS Saathi",
     "workbenchTitle": "What do you need to understand?",
     "sourceAware": "Source-aware",
     "placeholder": "Ask anything about BIS...",
     "describeProduct": "Describe your product in your own words",
-    "promptOne": "Which Indian Standard applies to my product?",
-    "promptTwo": "Do I need BIS certification?",
-    "promptThree": "What tests are required for my product?",
-    "promptFour": "Find a BIS-recognised testing laboratory.",
+    "promptOne": "Which Indian Standard applies to a stainless steel water bottle?",
+    "promptTwo": "Is BIS registration mandatory for a power bank sold in India?",
+    "promptThree": "Which BIS-recognised labs near Pune can test a two-wheeler helmet?",
+    "promptFour": "How do I check if my gold jewellery hallmark is genuine?",
     "quickTitle": "Start with a guided task",
     "quickDescription": "Choose a route or ask in your own words.",
     "quickStandard": "Find my standard",
@@ -56,7 +56,7 @@
   },
   "Auth": {
     "eyebrow": "Secure BIS workspace",
-    "title": "Continue to BIS Sathi",
+    "title": "Continue to BIS Saathi",
     "description": "Save product profiles, source-backed answers and compliance reports in one trusted workspace.",
     "google": "Continue with Google",
     "orEmail": "or use email",
@@ -72,7 +72,7 @@
     "benefitOne": "Keep every product assessment in one place",
     "benefitTwo": "Return to saved standards and source passages",
     "benefitThree": "Generate and share compliance reports",
-    "officialNote": "Authentication is handled securely through Supabase. BIS Sathi never asks for a password."
+    "officialNote": "Authentication is handled securely through Supabase. BIS Saathi never asks for a password."
   },
   "Verify": {
     "eyebrow": "Email verification",

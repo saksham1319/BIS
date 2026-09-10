@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "./styles/assistant.css";
+@import "./styles/views.css";
 
 :root {
   --bg:#f7f8fa;--surface:#fff;--surface-subtle:#f1f4f7;--surface-muted:#e9edf2;
