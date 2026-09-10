@@ -1,4 +1,4 @@
-export const SUPPORTED_LOCALES = ["en", "hi"] as const;
+export const SUPPORTED_LOCALES = ["en", "ta", "te", "kn", "hi"] as const;
 
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
 
@@ -6,6 +6,9 @@ export const DEFAULT_LOCALE: Locale = "en";
 
 export const LOCALE_NAMES: Record<Locale, string> = {
   en: "English",
+  ta: "தமிழ்",
+  te: "తెలుగు",
+  kn: "ಕನ್ನಡ",
   hi: "हिन्दी",
 };
 

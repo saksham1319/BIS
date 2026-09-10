@@ -72,7 +72,7 @@ export default function AuthPage() {
       </header>
 
       <div className="auth-layout">
-        <aside className="auth-context" aria-label="Account benefits">
+        <aside className="auth-context" aria-label={t("description")}>
           <div className="auth-context-mark"><LockKey size={23} weight="duotone" /></div>
           <h2>{t("description")}</h2>
           <ul>
