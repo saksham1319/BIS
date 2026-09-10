@@ -27,7 +27,7 @@ Get a free key at **https://aistudio.google.com/apikey** (Google AI Studio → *
 pnpm dev
 ```
 
-Open **http://localhost:3000** — it redirects to `/en` (or `/hi` for Hindi).
+Open **http://localhost:3000** — it redirects to `/en` (or `/hi`, `/ta`, `/te`, `/kn` for Hindi, Tamil, Telugu, and Kannada).
 
 ### Where the API key goes — the short version
 
@@ -59,14 +59,14 @@ curl -s http://localhost:3000/api/health
 
 ## What it does
 
-- **AI compliance assistant** — ask in plain English or Hindi ("I manufacture stainless steel water bottles, do I need BIS certification?"). Answers stream in with a direct verdict, the applicable standard, certification status, required tests, and next steps.
+- **AI compliance assistant** — ask in plain English, Hindi, Tamil, Telugu, or Kannada ("I manufacture stainless steel water bottles, do I need BIS certification?"). Answers stream in with a direct verdict, the applicable standard, certification status, required tests, and next steps.
 - **Clause-level citations** — every material claim carries an inline `[1]` marker that opens the exact clause, page, and passage it came from. Click through to a document viewer with the cited passage highlighted.
 - **Standards Explorer** — search and filter the corpus by sector and status, with scope, clauses, tests, linked QCO, and revision relationships.
 - **Certification guide** — step-by-step process, document checklist, fees, and timelines per scheme (ISI Mark, CRS, FMCS, Hallmarking, ECO Mark, MSCS).
 - **Laboratory finder** — search recognised labs by location and test scope, and compare up to three side by side.
 - **Hallmarking** — a consumer-facing HUID check (demonstration) plus an assaying-centre finder.
 - **Reports** — generate and download a compliance summary for a product.
-- **Bilingual** — English and Hindi, on locale-prefixed routes.
+- **Multilingual** — English, Hindi, Tamil, Telugu, and Kannada, on locale-prefixed routes (`/en`, `/hi`, `/ta`, `/te`, `/kn`).
 
 ---
 
@@ -107,7 +107,7 @@ Next.js 16 (App Router) · React 19 · TypeScript · Tailwind v4 + CSS custom pr
 5. **Follow up:** *"It is vacuum-insulated, 750 ml, for domestic use."* — the answer sharpens using conversation context.
 6. **Standards Explorer** — search `helmet`, filter by sector, open a standard, show clauses and the linked QCO.
 7. **Labs** — search `Pune`, select two labs, compare turnaround.
-8. **Language switch to हिन्दी** — the interface localises.
+8. **Language switch to हिन्दी, தமிழ், తెలుగు, or ಕನ್ನಡ** — the interface localises.
 
 ---
 

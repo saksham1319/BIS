@@ -9,6 +9,7 @@
  * can go wrong the response has already begun with 200.
  */
 
+import { isLocale } from "@/i18n/locales";
 import { isAiConfigured } from "@/lib/bis/env";
 import { streamAnswer } from "@/lib/bis/gemini";
 import { composeFallbackAnswer } from "@/lib/bis/prompt";
@@ -94,7 +95,7 @@ export async function POST(request: Request): Promise<Response> {
 
   const history = sanitiseHistory(body.history);
   const rawLocale = body.locale;
-  const locale = typeof rawLocale === "string" && rawLocale === "hi" ? "hi" : "en";
+  const locale = typeof rawLocale === "string" && isLocale(rawLocale) ? rawLocale : "en";
   const signal = request.signal;
 
   const encoder = new TextEncoder();
@@ -164,7 +165,12 @@ export async function POST(request: Request): Promise<Response> {
         } else {
           /* 4 — Grounded BIS Intelligence Engine (instant, cited, zero-fail) -- */
           send({ type: "status", label: "Synthesizing BIS compliance guidance" });
-          const synthesized = composeFallbackAnswer(question, retrieval);
+          const synthesized = composeFallbackAnswer(
+            question,
+            retrieval,
+            isAiConfigured() ? "ai-error" : "no-key",
+            locale,
+          );
 
           // Stream words fluidly to provide natural conversational UX
           const words = synthesized.summary.split(" ");
@@ -196,7 +202,12 @@ export async function POST(request: Request): Promise<Response> {
         if (retrieval) {
           send({
             type: "answer",
-            answer: composeFallbackAnswer(question, retrieval),
+            answer: composeFallbackAnswer(
+              question,
+              retrieval,
+              isAiConfigured() ? "ai-error" : "no-key",
+              locale,
+            ),
           });
         } else {
           const message =

@@ -42,7 +42,7 @@ Regulatory answers may depend on material, intended use, product construction, t
 - Desktop, tablet, and mobile web are first-class. On mobile, evidence opens as a bottom sheet or expandable drawer.
 - Google and email/OTP sign-in are supported without blocking basic guest questions.
 - Supabase provides browser/server clients, cookie-based SSR sessions, Google OAuth, and passwordless email verification. User-specific tables must use Row Level Security when persistence is added.
-- Locale-prefixed routes and message dictionaries support English and Hindi. Official document excerpts may remain in their published language while navigation and guidance adapt to the selected locale.
+- Locale-prefixed routes and message dictionaries support English, Hindi, Tamil, Telugu, and Kannada (`/en`, `/hi`, `/ta`, `/te`, `/kn`). Official document excerpts may remain in their published language while navigation and guidance adapt to the selected locale.
 
 ## Brand Commitments
 

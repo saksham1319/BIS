@@ -99,7 +99,7 @@ The interface stays calm even when the subject is complex. It presents a direct 
 - Evidence-first hierarchy with clause-level citations.
 - Light, warm-neutral surfaces with high-contrast navy typography.
 - Dense metadata only where it supports a decision.
-- English and Hindi interfaces with script-appropriate typography.
+- Multilingual interfaces (English, Hindi, Tamil, Telugu, Kannada) with script-appropriate typography.
 - Responsive evidence drawers and vertically stacked workflows on small screens.
 
 ## Colors
@@ -137,7 +137,9 @@ The palette treats navy as institutional ink, saffron as a scarce action or atte
 
 **Hindi Font:** Noto Sans Devanagari (with Geist and sans-serif fallback)
 
-**Character:** The Latin typography is compact, contemporary, and neutral enough for regulatory reading. Hindi uses a dedicated Devanagari face with matching weight and density rather than relying on a browser fallback.
+**Regional Indic Scripts:** System and native font fallbacks for Tamil, Telugu, and Kannada ensuring legible rendering across all locales (`/en`, `/hi`, `/ta`, `/te`, `/kn`).
+
+**Character:** The Latin typography is compact, contemporary, and neutral enough for regulatory reading. Hindi uses a dedicated Devanagari face with matching weight and density, while regional Indic scripts (Tamil, Telugu, Kannada) render cleanly with native font fallbacks.
 
 ### Hierarchy
 
@@ -218,7 +220,7 @@ Authentication is a focused page rather than a forced gate or chat modal. Deskto
 - **Do** attach material claims to small, keyboard-accessible citation markers.
 - **Do** use borders, paper tones, and spacing to explain structure.
 - **Do** keep uncertainty visible with calibrated status language and one clear next action.
-- **Do** verify English and Hindi layouts at the same responsive widths.
+- **Do** verify English, Hindi, Tamil, Telugu, and Kannada layouts at the same responsive widths.
 
 ### Don't:
 

@@ -88,7 +88,7 @@ Swapping the demo corpus for real BIS documents later means replacing only
 - [x] Confirmed `.env*` is gitignored, `.env.example` tracked
 - [x] Confirmed Supabase is null-guarded → app runs with auth unconfigured, no crash
 - [x] `README.md` — setup, where the key goes, architecture, 3-min demo script, troubleshooting
-- [x] Demo prompts sharpened in `i18n/dictionaries/en.json` + `hi.json` (`promptOne..promptFour`)
+- [x] Demo prompts sharpened in `i18n/dictionaries/en.json` + `hi.json`, `ta.json`, `te.json`, `kn.json` (`promptOne..promptFour`)
 - [x] Baseline `npx tsc --noEmit` passes clean
 - [x] Dev server confirmed running and serving `/en` → 200
 
@@ -145,7 +145,7 @@ Then in the browser at `http://localhost:3000/en`:
 - [ ] Certification stepper + document checklist works
 - [ ] Hallmarking HUID check returns a clearly-labelled demo result
 - [ ] Report generation downloads a file
-- [ ] Language switch to `/hi` works
+- [ ] Language switch to `/hi`, `/ta`, `/te`, `/kn` works
 - [ ] Mobile viewport (< 720px) — evidence becomes a bottom sheet, bottom nav works
 - [ ] **Kill the API key and re-ask** — must still show sources, not a blank screen
 
@@ -202,7 +202,7 @@ check + centre finder), `DocumentViewer` (real clause, highlighted, focus-trappe
 - [ ] "AI connected" badge in the topbar driven by `/api/health`
 - [ ] Persist chat history to `localStorage` so a refresh mid-demo doesn't lose the thread
 - [ ] Wire the Products / History / Dashboard views to the corpus (currently still static)
-- [ ] Hindi answers — pass the active locale into the prompt so the model replies in Hindi on `/hi`
+- [ ] Multilingual answers — pass the active locale into the prompt so the model replies in Hindi on `/hi`, Tamil on `/ta`, Telugu on `/te`, and Kannada on `/kn`
 - [ ] Deploy to Vercel (`vercel env add GEMINI_API_KEY`, then `vercel deploy --prod`)
 - [ ] Reconcile "Sathi" vs "Saathi" if the submission requires the problem-statement spelling
 
