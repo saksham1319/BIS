@@ -90,6 +90,11 @@ export default function AuthPage() {
             <p>{t("guestNote")}</p>
           </div>
 
+          <div className="status neutral" style={{marginBottom: 20, padding: "10px 12px", borderRadius: 8, display: "flex", gap: 8, alignItems: "flex-start", textAlign: "left"}}>
+            <LockKey size={18} style={{flexShrink: 0, marginTop: 2}} />
+            <p style={{margin: 0, fontSize: 11.5, lineHeight: 1.5, color: "var(--muted)"}}>{t("configurationError")}</p>
+          </div>
+
           <button type="button" className="auth-provider" onClick={continueWithGoogle} disabled={pending !== null}>
             {pending === "google" ? <span className="auth-spinner" /> : <GoogleLogo size={20} weight="bold" />}
             {t("google")}

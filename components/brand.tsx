@@ -1,19 +1,26 @@
 "use client";
 
-import { SealCheck } from "@phosphor-icons/react";
+import Image from "next/image";
 
 export function Brand({ compact = false }: { compact?: boolean }) {
   return (
-    <div className="brand" aria-label="BIS Intelligence">
+    <div className="brand" aria-label="BIS Saathi">
       <span className="brand-mark" aria-hidden="true">
-        <SealCheck size={compact ? 20 : 22} weight="fill" />
+        <Image
+          src="/logo.png"
+          alt="BIS Saathi"
+          width={36}
+          height={36}
+          priority
+        />
       </span>
       {!compact && (
         <span className="brand-copy">
           <strong>BIS</strong>
-          <span>Intelligence</span>
+          <span>Saathi</span>
         </span>
       )}
     </div>
   );
 }
+

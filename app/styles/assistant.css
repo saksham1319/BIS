@@ -1,0 +1,204 @@
+/* Live assistant UI.
+   Additive only: every selector here is either a new class or is deliberately more
+   specific than its counterpart in globals.css, so this file works regardless of
+   where it is imported. Colours come from the tokens defined in globals.css. */
+
+/* ---------------------------------------------------------------- retrieval */
+.retrieval-steps span.is-done{color:var(--muted)}
+.retrieval-steps span.is-active{color:var(--ink-strong);font-weight:620}
+.retrieval-steps span.is-active svg{color:var(--navy)}
+.retrieval-steps span.is-active>em{
+  font-style:normal;
+  background:linear-gradient(90deg,var(--muted) 0%,var(--ink-strong) 40%,var(--muted) 80%);
+  background-size:240% 100%;
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;color:transparent;
+  animation:retrieval-shimmer 1700ms linear infinite;
+}
+@keyframes retrieval-shimmer{from{background-position:130% 0}to{background-position:-130% 0}}
+
+/* ------------------------------------------------------------------- answer */
+.answer-summary{display:block}
+.answer-summary p+p{margin-top:14px}
+.answer-summary:empty{min-height:22px}
+
+.stream-caret{
+  display:inline-block;width:2px;height:1em;margin-left:3px;
+  vertical-align:-2px;border-radius:1px;background:var(--navy);
+  animation:stream-caret-blink 1050ms steps(1,end) infinite;
+}
+@keyframes stream-caret-blink{0%,45%{opacity:1}50%,95%{opacity:.1}100%{opacity:1}}
+
+/* Decision grid keeps clean edges for 1-4 blocks, not just the 4-block case. */
+.decision-grid.has-1 .decision-block:nth-child(odd){border-right:0}
+.decision-grid.has-1 .decision-block:nth-child(-n+2){border-bottom:0;grid-column:1/-1}
+.decision-grid.has-2 .decision-block:nth-child(-n+2){border-bottom:0}
+.decision-grid.has-3 .decision-block:nth-child(3){border-right:0;grid-column:1/-1}
+
+.decision-note{display:block;color:var(--muted);font-size:11.5px;line-height:1.45}
+.attribute-chips{margin-top:12px;display:flex;flex-wrap:wrap;gap:5px}
+.attribute-chip{
+  padding:3px 7px;border-radius:5px;background:var(--surface-subtle);
+  color:var(--muted);font-size:9.5px;font-weight:620;letter-spacing:.01em;
+}
+
+/* Confidence / certification pill in navy. Semantic amber + green already exist. */
+.status.navy{background:var(--navy-soft);color:var(--navy)}
+
+/* -------------------------------------------------------- standards listing */
+.standard-list{margin-top:16px;display:grid;gap:8px}
+.standard-row{
+  width:100%;position:relative;padding:14px 15px;display:grid;gap:6px;
+  border:1px solid var(--line);border-radius:var(--radius-sm);
+  background:var(--surface);color:inherit;text-align:left;cursor:pointer;
+  transition:border-color 160ms ease,box-shadow 160ms ease,background-color 160ms ease;
+}
+.standard-row.is-static{cursor:default}
+button.standard-row:hover{border-color:color-mix(in srgb,var(--navy) 32%,var(--line));box-shadow:var(--shadow-sm)}
+.standard-row-head{display:flex;align-items:center;justify-content:flex-start;gap:9px;flex-wrap:wrap}
+.standard-row-head strong{color:var(--ink-strong);font-size:14px;letter-spacing:-.02em}
+.standard-row-title{display:block;color:var(--ink);font-size:12.5px;line-height:1.45}
+.standard-row-why{display:block;color:var(--muted);font-size:11.5px;line-height:1.5}
+.standard-row-open{position:absolute;right:13px;top:15px;color:var(--faint)}
+button.standard-row:hover .standard-row-open{color:var(--navy)}
+
+/* Next steps: 1, 2 or many. */
+.next-steps ol.steps-1{grid-template-columns:minmax(0,1fr)}
+.next-steps ol.steps-2{grid-template-columns:repeat(2,minmax(0,1fr))}
+.next-steps ol li:nth-child(3n+1){padding-left:0;border-left:0}
+.next-steps ol li:nth-child(n+4){padding-top:14px}
+
+/* Action row. */
+.answer-actions .copy-answer{margin-left:auto}
+.button.ghost.copy-answer.is-copied{color:var(--success)}
+
+/* --------------------------------------------------------- evidence panel */
+.evidence-header span.is-muted{color:var(--faint)}
+.evidence-empty{
+  padding:34px 22px;display:flex;flex-direction:column;align-items:flex-start;gap:9px;
+  color:var(--faint);
+}
+.evidence-empty>svg{
+  width:44px;height:44px;padding:9px;display:block;
+  border-radius:11px;background:var(--surface-subtle);color:var(--navy);
+}
+.evidence-empty strong{color:var(--ink-strong);font-size:13px}
+.evidence-empty p{margin:0;color:var(--muted);font-size:11.5px;line-height:1.6}
+
+/* ------------------------------------------------------------ empty thread */
+.assistant-welcome{
+  margin-top:26px;padding:22px;
+  border:1px solid var(--line);border-radius:var(--radius);background:var(--surface);
+}
+.assistant-welcome>strong{display:block;color:var(--ink-strong);font-size:14px;letter-spacing:-.015em}
+.assistant-welcome>p{margin:6px 0 0;color:var(--muted);font-size:12px;line-height:1.5}
+.example-questions{margin-top:16px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.example-questions button{
+  min-height:84px;padding:14px 15px;display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  border:1px solid var(--line);border-radius:var(--radius-sm);background:var(--surface);
+  color:var(--ink);text-align:left;font-size:12.5px;line-height:1.5;cursor:pointer;
+  transition:transform 160ms ease,border-color 160ms ease,box-shadow 160ms ease;
+}
+.example-questions button:hover{
+  transform:translateY(-2px);
+  border-color:color-mix(in srgb,var(--navy) 30%,var(--line));
+  box-shadow:var(--shadow-sm);
+}
+.example-questions button>span{min-width:0}
+.example-arrow{flex:0 0 auto;margin-top:2px;color:var(--faint);transform:rotate(-90deg)}
+.example-questions button:hover .example-arrow{color:var(--navy)}
+
+/* ------------------------------------------------------- composer surround */
+.jump-latest{
+  position:absolute;left:50%;top:-10px;z-index:6;
+  min-height:32px;padding:0 12px;display:inline-flex;align-items:center;gap:6px;
+  transform:translateX(-50%);
+  border:1px solid var(--line-strong);border-radius:999px;background:var(--surface);
+  color:var(--navy);font-size:11.5px;font-weight:660;
+  box-shadow:var(--shadow-sm);cursor:pointer;
+}
+.jump-latest:hover{border-color:color-mix(in srgb,var(--navy) 35%,var(--line));background:var(--surface-subtle)}
+
+.assistant-error{
+  margin-bottom:9px;padding:10px 8px 10px 13px;
+  display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;
+  border:1px solid color-mix(in srgb,var(--danger) 32%,var(--line));
+  border-radius:var(--radius-sm);
+  background:color-mix(in srgb,var(--danger) 7%,var(--surface));
+  color:var(--danger);
+}
+.assistant-error p{margin:0;font-size:11.5px;line-height:1.45}
+.assistant-error .icon-button{width:28px;height:28px;color:var(--danger)}
+.assistant-error .icon-button:hover{background:color-mix(in srgb,var(--danger) 12%,transparent);color:var(--danger)}
+
+.send-button.is-stop{background:var(--ink-strong)}
+.send-button.is-stop:hover{background:var(--ink)}
+.send-button:disabled{background:var(--surface-muted);color:var(--faint);cursor:not-allowed}
+.send-button:disabled:hover{background:var(--surface-muted)}
+.app-composer textarea:disabled{background:transparent;color:var(--muted);cursor:progress}
+
+/* ----------------------------------------------------------- speech to text */
+.composer-actions{
+  display:flex;align-items:center;gap:6px;flex-shrink:0;
+}
+.mic-button{
+  height:34px;min-width:34px;padding:0 8px;
+  display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  border:1px solid var(--line);border-radius:10px;
+  background:var(--surface);color:var(--muted);cursor:pointer;
+  transition:background-color 160ms ease,color 160ms ease,border-color 160ms ease,transform 120ms ease;
+}
+.hero-composer .mic-button{
+  height:38px;min-width:38px;
+}
+.mic-button:hover:not(:disabled){
+  background:var(--surface-subtle);color:var(--ink-strong);
+  border-color:color-mix(in srgb,var(--navy) 35%,var(--line));
+}
+.mic-button:disabled{
+  background:var(--surface-subtle);color:var(--faint);
+  border-color:var(--line);cursor:not-allowed;opacity:.6;
+}
+.mic-button.is-listening{
+  background:color-mix(in srgb,var(--danger) 8%,var(--surface));
+  color:var(--danger);
+  border-color:color-mix(in srgb,var(--danger) 40%,var(--line));
+}
+.mic-button.is-listening:hover{
+  background:color-mix(in srgb,var(--danger) 14%,var(--surface));
+}
+.mic-label{
+  font-size:11.5px;font-weight:650;white-space:nowrap;letter-spacing:-.01em;
+}
+.composer-listening-status{
+  display:inline-flex;align-items:center;gap:6px;
+  margin-left:5px;color:var(--danger);
+  font-size:11.5px;font-weight:600;white-space:nowrap;
+}
+.mic-listening-dot{
+  width:6px;height:6px;border-radius:999px;
+  background:var(--danger);animation:mic-pulse 1.2s ease-in-out infinite;
+}
+@keyframes mic-pulse{
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:.4;transform:scale(.85)}
+}
+
+/* ------------------------------------------------------------- responsive */
+@media(max-width:720px){
+  .example-questions{grid-template-columns:minmax(0,1fr)}
+  .example-questions button{min-height:66px}
+  .next-steps ol.steps-1,.next-steps ol.steps-2{grid-template-columns:minmax(0,1fr)}
+  .assistant-welcome{padding:17px}
+  .answer-actions .copy-answer{margin-left:0}
+}
+
+/* --------------------------------------------------------- reduced motion */
+@media(prefers-reduced-motion:reduce){
+  .retrieval-steps span.is-active>em{
+    background:none;color:var(--ink-strong);-webkit-text-fill-color:currentColor;animation:none;
+  }
+  .stream-caret{animation:none;opacity:1}
+  .example-questions button:hover{transform:none}
+  .mic-listening-dot{animation:none}
+}

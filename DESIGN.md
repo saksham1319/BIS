@@ -1,5 +1,5 @@
 ---
-name: BIS Intelligence
+name: BIS Saathi
 description: A calm, evidence-first interface for understanding Indian Standards and navigating BIS compliance.
 colors:
   dossier-navy: "#0e315e"
@@ -84,13 +84,13 @@ components:
     size: "21px"
 ---
 
-# Design System: BIS Intelligence
+# Design System: BIS Saathi
 
 ## Overview
 
 **Creative North Star: "The Verification Dossier"**
 
-BIS Intelligence feels like a precise standards dossier made interactive. Warm paper surfaces, navy ink, thin document rules, clause markers, and restrained saffron signals make each answer feel inspectable and official while preserving the speed of a modern AI product.
+BIS Saathi feels like a precise standards dossier made interactive. Warm paper surfaces, navy ink, thin document rules, clause markers, and restrained saffron signals make each answer feel inspectable and official while preserving the speed of a modern AI product.
 
 The interface stays calm even when the subject is complex. It presents a direct answer, the decision factors, the evidence, and the next action in that order. Authentication and localized routes use the same visual language so users never feel they have entered a separate consumer app.
 
@@ -137,7 +137,9 @@ The palette treats navy as institutional ink, saffron as a scarce action or atte
 
 **Hindi Font:** Noto Sans Devanagari (with Geist and sans-serif fallback)
 
-**Character:** The Latin typography is compact, contemporary, and neutral enough for regulatory reading. Hindi uses a dedicated Devanagari face with matching weight and density rather than relying on a browser fallback.
+**Regional Indic Scripts:** System and native font fallbacks for Tamil, Telugu, and Kannada ensuring legible rendering across all locales (`/en`, `/hi`, `/ta`, `/te`, `/kn`).
+
+**Character:** The Latin typography is compact, contemporary, and neutral enough for regulatory reading. Hindi uses a dedicated Devanagari face with matching weight and density, while regional Indic scripts (Tamil, Telugu, Kannada) render cleanly with native font fallbacks.
 
 ### Hierarchy
 
