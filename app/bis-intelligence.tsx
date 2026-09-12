@@ -70,6 +70,9 @@ type View =
 type NavKey = "assistant" | "products" | "standards" | "certification" | "labs" | "hallmarking" | "history" | "reports";
 type NavItem = { id: View; labelKey: NavKey; icon: Icon };
 
+type SpecificationType = "vacuum" | "single" | "water" | "other";
+type ClarificationState = "needed" | "refining" | "answered";
+
 type PreviewActions = { notify: (message: string) => void; preview: () => void; downloadReport: () => void };
 const PreviewContext = createContext<PreviewActions>({ notify: () => {}, preview: () => {}, downloadReport: () => {} });
 
@@ -282,22 +285,397 @@ function RetrievalState() {
   return <div className="retrieval-state" role="status" aria-live="polite"><div className="retrieval-mark"><MagnifyingGlass size={21} /></div><div><strong>{ws("loadingPreview")}</strong><div className="retrieval-steps">{steps.map((step, index) => <span key={step} style={{ animationDelay: `${index * 260}ms` }}><CheckCircle size={15} weight={index === 0 ? "fill" : "regular"} /> {step}</span>)}</div></div></div>;
 }
 
-function AnswerCard({ onCitation, onOpenView }: { onCitation: (id: string) => void; onOpenView: (view: View) => void }) {
+function ClarificationCard({
+  onSelectOption,
+  onSubmitCustom,
+}: {
+  onSelectOption: (spec: SpecificationType) => void;
+  onSubmitCustom: (text: string) => void;
+}) {
+  const ws = useTranslations("Workspace");
+  const [customText, setCustomText] = useState("");
+
+  const options: { id: SpecificationType; label: string }[] = [
+    { id: "vacuum", label: ws("clarificationOptionVacuum") },
+    { id: "single", label: ws("clarificationOptionSingle") },
+    { id: "water", label: ws("clarificationOptionWater") },
+    { id: "other", label: ws("clarificationOptionOther") },
+  ];
+
+  return (
+    <section className="clarification-card" aria-label={ws("clarificationRequired")}>
+      <div className="clarification-header">
+        <span className="clarification-tag">
+          <WarningCircle size={16} weight="fill" /> {ws("clarificationRequired")}
+        </span>
+        <h3>{ws("clarificationSubtitle")}</h3>
+        <p>{ws("clarificationExplanation")}</p>
+      </div>
+
+      <div className="clarification-chips" role="group" aria-label={ws("clarificationRequired")}>
+        {options.map((opt) => (
+          <button
+            key={opt.id}
+            type="button"
+            className="clarification-chip"
+            onClick={() => onSelectOption(opt.id)}
+          >
+            <span>{opt.label}</span>
+            <ArrowRight size={15} />
+          </button>
+        ))}
+      </div>
+
+      <form
+        className="clarification-composer"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (customText.trim()) {
+            onSubmitCustom(customText.trim());
+          }
+        }}
+      >
+        <label htmlFor="clarification-input" className="sr-only">
+          {ws("clarificationCustomPlaceholder")}
+        </label>
+        <input
+          id="clarification-input"
+          type="text"
+          value={customText}
+          onChange={(e) => setCustomText(e.target.value)}
+          placeholder={ws("clarificationCustomPlaceholder")}
+        />
+        <button
+          type="submit"
+          className="button primary"
+          disabled={!customText.trim()}
+        >
+          {ws("submitClarification")}
+        </button>
+      </form>
+    </section>
+  );
+}
+
+function RefiningState() {
+  const ws = useTranslations("Workspace");
+  const steps = [ws("previewStepStandards"), ws("previewStepCertification"), ws("previewStepSources")];
+  return (
+    <div className="retrieval-state" role="status" aria-live="polite">
+      <div className="retrieval-mark">
+        <SlidersHorizontal size={21} />
+      </div>
+      <div>
+        <strong>{ws("refiningAssessment")}</strong>
+        <div className="retrieval-steps">
+          {steps.map((step, index) => (
+            <span key={step} style={{ animationDelay: `${index * 240}ms` }}>
+              <CheckCircle size={15} weight={index === 0 ? "fill" : "regular"} /> {step}
+            </span>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function AnswerCard({
+  specification,
+  onChangeSpecification,
+  onCitation,
+  onOpenView,
+}: {
+  specification: SpecificationType;
+  onChangeSpecification: () => void;
+  onCitation: (id: string) => void;
+  onOpenView: (view: View) => void;
+}) {
   const { downloadReport, notify } = useContext(PreviewContext);
   const ws = useTranslations("Workspace");
+  const [expandedTests, setExpandedTests] = useState(false);
+
+  const isVacuum = specification === "vacuum";
+  const isSingle = specification === "single";
+  const isWater = specification === "water";
+
+  const standardNumber = isVacuum
+    ? "IS 17803:2022"
+    : isSingle
+    ? "IS 14756:2022"
+    : isWater
+    ? "IS 14543:2024"
+    : "IS 17803 / IS 14756";
+
+  const productName = isVacuum
+    ? ws("stainlessSteelWaterBottle")
+    : isSingle
+    ? ws("singleWallProduct")
+    : isWater
+    ? ws("packagedWaterProduct")
+    : ws("clarificationOptionOther");
+
+  const specLabel = isVacuum
+    ? ws("constructionVacuumTitle")
+    : isSingle
+    ? ws("constructionSingleTitle")
+    : isWater
+    ? ws("clarificationOptionWater")
+    : ws("constructionOtherTitle");
+
   return (
     <article className="answer" aria-label={ws("bISIntelligenceAnswer")}>
-      <div className="answer-intro"><div className="assistant-emblem"><SealCheck size={21} weight="fill" /></div><div><div className="answer-byline">BIS Intelligence <span>{ws("illustrativeAssessment")}</span></div><p>{ws.rich("answerSummary", { standard: (chunks) => <strong>{chunks}</strong> })} <Citation index={1} onClick={() => onCitation("standard")} /> <Citation index={2} onClick={() => onCitation("qco")} /></p></div></div>
-      <div className="decision-grid">
-        <section className="decision-block product-block"><span className="decision-label">{ws("productIdentified")}</span><div className="decision-with-icon"><Package size={22} /><div><strong>{ws("stainlessSteelWaterBottle")}</strong><small>{ws("domesticDrinkware")}</small></div></div></section>
-        <section className="decision-block standard-block"><span className="decision-label">{ws("recommendedStandard")}</span><strong className="standard-number">IS 17803:2022</strong><button type="button" className="inline-action" onClick={() => onCitation("standard")}>{ws("viewStandard")} <ArrowSquareOut size={15} /></button></section>
-        <section className="decision-block certification-block"><span className="decision-label">{ws("certification")}</span><span className="status attention"><Warning size={15} weight="fill" /> {ws("applicabilityCheckRequired")}</span><p>{ws("confirmConstructionAndNotifiedScopeBeforeProceeding")}</p></section>
-        <section className="decision-block scheme-block"><span className="decision-label">{ws("applicableScheme")}</span><div className="scheme-line"><span className="scheme-badge">Scheme-I</span><button type="button" className="help-dot" aria-label={ws("whatIsSchemeI")} onClick={() => notify(ws("schemeExplanation"))}><Question size={14} /></button></div><p>{ws("productCertificationWithTestingAndConformityAssessment")}</p></section>
+      <div className="clarified-status-banner">
+        <div className="banner-left">
+          <SealCheck size={18} weight="fill" />
+          <span>{ws("clarifiedParameter", { detail: specLabel })}</span>
+        </div>
+        <button
+          type="button"
+          className="button ghost compact-btn"
+          onClick={onChangeSpecification}
+        >
+          {ws("changeSpecification")}
+        </button>
       </div>
-      <section className="answer-section"><div className="section-title-row"><div><h3>{ws("testingRequirements")}</h3><p>{ws("likelyTestGroupsUnderTheProductStandardAnd")}</p></div><Citation index={3} onClick={() => onCitation("manual")} /></div><div className="test-list">{[ws("materialAndWorkmanship"), ws("capacityAndThermalPerformance"), ws("leakageAndImpactResistance")].map((test) => <span key={test}><Check size={15} weight="bold" /> {test}</span>)}</div></section>
-      <section className="caveat"><Info size={20} weight="fill" /><div><strong>{ws("oneDetailCanChangeThisResult")}</strong><p>{ws("isTheBottleVacuumInsulatedSingleWallOr")}</p></div><button type="button" onClick={() => { const input = document.getElementById("follow-up") as HTMLTextAreaElement | null; input?.focus(); notify(ws("additionalDetail")); }}>{ws("addDetail")}</button></section>
-      <section className="next-steps"><div className="section-title-row"><div><h3>{ws("recommendedNextSteps")}</h3><p>{ws("moveFromIdentificationToAVerifiedCompliancePath")}</p></div></div><ol><li><span>1</span><div><strong>{ws("confirmProductConstruction")}</strong><small>{ws("addInsulationTypeCapacityAndIntendedUse")}</small></div></li><li><span>2</span><div><strong>{ws("verifyTheCurrentQCO")}</strong><small>{ws("checkWhetherMandatoryCertificationApplies")}</small></div></li><li><span>3</span><div><strong>{ws("planTesting")}</strong><small>{ws("matchTheRequiredTestsWithARecognisedLab")}</small></div></li></ol></section>
-      <div className="answer-actions"><button type="button" className="button primary" onClick={() => onOpenView("products")}>{ws("saveAsProduct")}</button><button type="button" className="button secondary" onClick={() => onOpenView("labs")}>{ws("findLaboratory")}</button><button type="button" className="button ghost" onClick={downloadReport}><DownloadSimple size={17} /> {ws("generateReport")}</button><div className="answer-icon-actions"><IconButton label={ws("saveAnswer")}><BookmarkSimple size={18} /></IconButton><IconButton label={ws("shareAnswer")}><ShareNetwork size={18} /></IconButton></div></div>
+
+      <div className="answer-intro">
+        <div className="assistant-emblem">
+          <SealCheck size={21} weight="fill" />
+        </div>
+        <div>
+          <div className="answer-byline">
+            BIS Intelligence <span>{ws("illustrativeAssessment")}</span>
+          </div>
+          {isVacuum ? (
+            <p>
+              {ws.rich("answerSummary", { standard: (chunks) => <strong>{chunks}</strong> })}{" "}
+              <Citation index={1} onClick={() => onCitation("standard")} />{" "}
+              <Citation index={2} onClick={() => onCitation("qco")} />
+            </p>
+          ) : isSingle ? (
+            <p>
+              {ws("singleWallSummary")}{" "}
+              <Citation index={1} onClick={() => onCitation("standard")} />
+            </p>
+          ) : isWater ? (
+            <p>
+              {ws("packagedWaterSummary")}{" "}
+              <Citation index={1} onClick={() => onCitation("standard")} />
+            </p>
+          ) : (
+            <p>
+              {ws("customProductSummary")}{" "}
+              <Citation index={1} onClick={() => onCitation("standard")} />
+            </p>
+          )}
+        </div>
+      </div>
+
+      <div className="decision-grid">
+        <section className="decision-block product-block">
+          <span className="decision-label">{ws("productIdentified")}</span>
+          <div className="decision-with-icon">
+            <Package size={22} />
+            <div>
+              <strong>{productName}</strong>
+              <small>{specLabel}</small>
+            </div>
+          </div>
+        </section>
+
+        <section className="decision-block standard-block">
+          <span className="decision-label">{ws("recommendedStandard")}</span>
+          <strong className="standard-number">{standardNumber}</strong>
+          <button type="button" className="inline-action" onClick={() => onCitation("standard")}>
+            {ws("viewStandard")} <ArrowSquareOut size={15} />
+          </button>
+        </section>
+
+        <section className="decision-block certification-block">
+          <span className="decision-label">{ws("certification")}</span>
+          <span className="status complete">
+            <ShieldCheck size={15} weight="fill" /> {ws("mandatoryCertification")}
+          </span>
+          <p>{ws("qcoEnforced")}</p>
+        </section>
+
+        <section className="decision-block scheme-block">
+          <span className="decision-label">{ws("applicableScheme")}</span>
+          <div className="scheme-line">
+            <span className="scheme-badge">Scheme-I</span>
+            <button
+              type="button"
+              className="help-dot"
+              aria-label={ws("whatIsSchemeI")}
+              onClick={() => notify(ws("schemeExplanation"))}
+            >
+              <Question size={14} />
+            </button>
+          </div>
+          <p>{ws("productCertificationWithTestingAndConformityAssessment")}</p>
+        </section>
+      </div>
+
+      <section className="product-scope-matrix" aria-label={ws("scopeAndParameters")}>
+        <div className="scope-title">
+          <DiamondsFour size={18} weight="fill" />
+          <h3>{ws("scopeAndParameters")}</h3>
+        </div>
+        <div className="scope-grid">
+          <div className="scope-param">
+            <span>{ws("parameterMaterial")}</span>
+            <strong>{ws("parameterMaterialVal")}</strong>
+          </div>
+          <div className="scope-param">
+            <span>{ws("parameterCapacity")}</span>
+            <strong>{ws("parameterCapacityVal")}</strong>
+          </div>
+          <div className="scope-param">
+            <span>{ws("parameterScheme")}</span>
+            <strong>Scheme-I</strong>
+          </div>
+        </div>
+      </section>
+
+      <section className="answer-section">
+        <div className="section-title-row">
+          <div>
+            <h3>{ws("testingRequirements")}</h3>
+            <p>{ws("likelyTestGroupsUnderTheProductStandardAnd")}</p>
+          </div>
+          <div className="test-heading-actions">
+            <button
+              type="button"
+              className="toggle-tests-button"
+              onClick={() => setExpandedTests((prev) => !prev)}
+            >
+              {expandedTests ? ws("collapseTests") : ws("expandAllTests")}
+            </button>
+            <Citation index={3} onClick={() => onCitation("manual")} />
+          </div>
+        </div>
+        <div className="test-list">
+          <div className="test-item-wrap">
+            <span>
+              <Check size={15} weight="bold" /> {ws("materialAndWorkmanship")}
+            </span>
+            {expandedTests && (
+              <small className="test-detail-text">{ws("materialWorkmanshipDesc")}</small>
+            )}
+          </div>
+          <div className="test-item-wrap">
+            <span>
+              <Check size={15} weight="bold" /> {ws("capacityAndThermalPerformance")}
+            </span>
+            {expandedTests && (
+              <small className="test-detail-text">{ws("thermalPerformanceDesc")}</small>
+            )}
+          </div>
+          <div className="test-item-wrap">
+            <span>
+              <Check size={15} weight="bold" /> {ws("leakageAndImpactResistance")}
+            </span>
+            {expandedTests && (
+              <small className="test-detail-text">{ws("leakageResistanceDesc")}</small>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="next-steps">
+        <div className="section-title-row">
+          <div>
+            <h3>{ws("priorityActions")}</h3>
+            <p>{ws("moveFromIdentificationToAVerifiedCompliancePath")}</p>
+          </div>
+        </div>
+        <div className="priority-action-grid">
+          <div className="priority-card">
+            <div className="priority-card-header">
+              <ShieldCheck size={20} weight="duotone" />
+              <strong>{ws("actionVerifyQco")}</strong>
+            </div>
+            <p>{ws("actionVerifyQcoDesc")}</p>
+            <button
+              type="button"
+              className="button secondary compact-btn"
+              onClick={() => onCitation("qco")}
+            >
+              {ws("actionInspectQco")} <ArrowSquareOut size={14} />
+            </button>
+          </div>
+
+          <div className="priority-card">
+            <div className="priority-card-header">
+              <Flask size={20} weight="duotone" />
+              <strong>{ws("actionFindLabs")}</strong>
+            </div>
+            <p>{ws("actionFindLabsDesc")}</p>
+            <button
+              type="button"
+              className="button secondary compact-btn"
+              onClick={() => onOpenView("labs")}
+            >
+              {ws("actionViewLabs")} <ArrowRight size={14} />
+            </button>
+          </div>
+
+          <div className="priority-card">
+            <div className="priority-card-header">
+              <Certificate size={20} weight="duotone" />
+              <strong>{ws("actionStartChecklist")}</strong>
+            </div>
+            <p>{ws("actionStartChecklistDesc")}</p>
+            <button
+              type="button"
+              className="button secondary compact-btn"
+              onClick={() => onOpenView("certification")}
+            >
+              {ws("actionViewChecklist")} <ArrowRight size={14} />
+            </button>
+          </div>
+        </div>
+
+        <div className="exploratory-actions">
+          <span className="exploratory-label">{ws("exploratoryActions")}</span>
+          <div className="exploratory-chips">
+            <button
+              type="button"
+              className="exploratory-chip"
+              onClick={() => onOpenView("standards")}
+            >
+              {ws("actionCompareStandard")} <CaretRight size={14} />
+            </button>
+            <button
+              type="button"
+              className="exploratory-chip"
+              onClick={() => notify(ws("actionCheckMigration"))}
+            >
+              {ws("actionCheckMigration")} <CaretRight size={14} />
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <div className="answer-actions">
+        <button type="button" className="button primary" onClick={() => onOpenView("products")}>
+          {ws("saveAsProduct")}
+        </button>
+        <button type="button" className="button secondary" onClick={() => onOpenView("labs")}>
+          {ws("findLaboratory")}
+        </button>
+        <button type="button" className="button ghost" onClick={downloadReport}>
+          <DownloadSimple size={17} /> {ws("generateReport")}
+        </button>
+        <div className="answer-icon-actions">
+          <IconButton label={ws("saveAnswer")}>
+            <BookmarkSimple size={18} />
+          </IconButton>
+          <IconButton label={ws("shareAnswer")}>
+            <ShareNetwork size={18} />
+          </IconButton>
+        </div>
+      </div>
     </article>
   );
 }
@@ -306,11 +684,128 @@ function AssistantView({ initialQuestion, loading, onAsk, onCitation, onOpenView
   const ws = useTranslations("Workspace");
   const locale = useLocale();
   const [query, setQuery] = useSessionDraft("bis-followup-draft");
-  function submit(event: FormEvent) { event.preventDefault(); if (!query.trim()) return; onAsk(query.trim()); setQuery(""); }
+
+  const [specification, setSpecification] = useState<SpecificationType>("vacuum");
+  const [clarificationState, setClarificationState] = useState<ClarificationState>("needed");
+  const [history, setHistory] = useState<Array<{ id: string; text: string }>>([]);
+
+
+  function handleSelectOption(spec: SpecificationType) {
+    setSpecification(spec);
+    setClarificationState("refining");
+    window.setTimeout(() => {
+      setClarificationState("answered");
+    }, 600);
+  }
+
+  function handleSubmitCustom(customText: string) {
+    setSpecification("other");
+    setClarificationState("refining");
+    setHistory((prev) => [...prev, { id: String(Date.now()), text: customText }]);
+    window.setTimeout(() => {
+      setClarificationState("answered");
+    }, 600);
+  }
+
+  function submit(event: FormEvent) {
+    event.preventDefault();
+    if (!query.trim()) return;
+    const submitted = query.trim();
+    setQuery("");
+    setHistory((prev) => [...prev, { id: String(Date.now()), text: submitted }]);
+    if (clarificationState === "needed") {
+      setSpecification("other");
+      setClarificationState("refining");
+      window.setTimeout(() => {
+        setClarificationState("answered");
+      }, 600);
+    } else {
+      onAsk(submitted);
+    }
+  }
+
   return (
     <div className="conversation-scroll">
-      <div className="conversation"><div className="conversation-heading"><div><h1>{ws("complianceAssistant")}</h1><p>{ws("askAProductOrBISServiceQuestionImportant")}</p></div><span className="context-chip"><Package size={15} /> {ws("productContextActive")}</span></div><div className="user-message"><span className="message-author">{ws("you")}</span><p>{initialQuestion}</p></div>{loading ? <RetrievalState /> : <AnswerCard onCitation={onCitation} onOpenView={onOpenView} />}</div>
-      <div className="sticky-composer-wrap"><form className="app-composer" onSubmit={submit}><label htmlFor="follow-up" className="sr-only">{ws("askAFollowUpQuestion")}</label><textarea id="follow-up" value={query} onChange={(event) => setQuery(event.target.value)} placeholder={ws("askAFollowUpOrDescribeAnotherProduct")} rows={2} /><div className="composer-footer"><div className="composer-tools"><IconButton label={ws("attachDocument")}><Paperclip size={19} /></IconButton><IconButton label={ws("useMicrophone")}><Microphone size={19} /></IconButton><span className="language-badge">{isLocale(locale) ? LOCALE_NAMES[locale] : locale}</span></div><button type="submit" className="send-button" aria-label={ws("sendQuestion")} disabled={!query.trim() || loading}><ArrowUp size={19} weight="bold" /></button></div></form><p className="ai-note">{ws("verifyFinalComplianceDecisionsWithTheCitedOfficial")}</p></div>
+      <div className="conversation">
+        <div className="conversation-heading">
+          <div>
+            <h1>{ws("complianceAssistant")}</h1>
+            <p>{ws("askAProductOrBISServiceQuestionImportant")}</p>
+          </div>
+          <span className="context-chip">
+            <Package size={15} /> {ws("productContextActive")}
+          </span>
+        </div>
+
+        <div className="user-message">
+          <span className="message-author">{ws("you")}</span>
+          <p>{initialQuestion}</p>
+        </div>
+
+        {history.map((msg) => (
+          <div key={msg.id} className="user-message">
+            <span className="message-author">{ws("you")}</span>
+            <p>{msg.text}</p>
+          </div>
+        ))}
+
+        {loading ? (
+          <RetrievalState />
+        ) : clarificationState === "needed" ? (
+          <ClarificationCard
+            onSelectOption={handleSelectOption}
+            onSubmitCustom={handleSubmitCustom}
+          />
+        ) : clarificationState === "refining" ? (
+          <RefiningState />
+        ) : (
+          <AnswerCard
+            specification={specification}
+            onChangeSpecification={() => setClarificationState("needed")}
+            onCitation={onCitation}
+            onOpenView={onOpenView}
+          />
+        )}
+      </div>
+
+      <div className="sticky-composer-wrap">
+        <form className="app-composer" onSubmit={submit}>
+          <label htmlFor="follow-up" className="sr-only">
+            {ws("askAFollowUpQuestion")}
+          </label>
+          <textarea
+            id="follow-up"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={ws("askAFollowUpOrDescribeAnotherProduct")}
+            rows={2}
+          />
+          <div className="composer-footer">
+            <div className="composer-tools">
+              <IconButton label={ws("attachDocument")}>
+                <Paperclip size={19} />
+              </IconButton>
+              <IconButton label={ws("useMicrophone")}>
+                <Microphone size={19} />
+              </IconButton>
+              <span className="language-badge">
+                {isLocale(locale) ? LOCALE_NAMES[locale] : locale}
+              </span>
+            </div>
+            <button
+              type="submit"
+              className="send-button"
+              aria-label={ws("sendQuestion")}
+              disabled={!query.trim() || loading}
+            >
+              <ArrowUp size={19} weight="bold" />
+            </button>
+          </div>
+        </form>
+        <p className="ai-note">
+          {ws("verifyFinalComplianceDecisionsWithTheCitedOfficial")}
+        </p>
+      </div>
     </div>
   );
 }
@@ -349,21 +844,229 @@ function PageHeading({ title, description, action }: { title: string; descriptio
 function ProductsView({ onNavigate }: { onNavigate: (view: View) => void }) {
   const { preview } = useContext(PreviewContext);
   const ws = useTranslations("Workspace");
+  const [construction, setConstruction] = useState<SpecificationType>("vacuum");
+  const [customText, setCustomText] = useState("");
+
   const steps = [
     { label: ws("product"), detail: ws("bottleProfile"), state: "done", icon: Package },
-    { label: ws("indianStandard"), detail: ws("relevantCount", { count: 2 }), state: "done", icon: Books },
+    {
+      label: ws("indianStandard"),
+      detail: ws("relevantCount", { count: construction === "single" ? 1 : 2 }),
+      state: "done",
+      icon: Books,
+    },
     { label: ws("qCOCheck"), detail: ws("reviewRequired"), state: "current", icon: ShieldCheck },
     { label: ws("certification"), detail: "Scheme-I", state: "upcoming", icon: Certificate },
-    { label: ws("testing"), detail: ws("testsCount", { count: 6 }), state: "upcoming", icon: Flask },
-    { label: ws("laboratory"), detail: ws("matchingCount", { count: 3 }), state: "upcoming", icon: Buildings },
+    {
+      label: ws("testing"),
+      detail: ws("testsCount", { count: construction === "single" ? 4 : 6 }),
+      state: "upcoming",
+      icon: Flask,
+    },
+    {
+      label: ws("laboratory"),
+      detail: ws("matchingCount", { count: construction === "single" ? 2 : 3 }),
+      state: "upcoming",
+      icon: Buildings,
+    },
     { label: ws("licence"), detail: ws("finalOutcome"), state: "upcoming", icon: IdentificationBadge },
   ];
+
   return (
     <div className="workspace-page products-page">
-      <PageHeading title={ws("productCompliance")} description={ws("turnAProductDescriptionIntoATraceableCompliance")} action={<button type="button" className="button primary" onClick={preview}><Plus size={17} /> {ws("addProduct")}</button>} />
-      <div className="product-overview"><div className="product-identity"><span className="product-icon"><Package size={28} weight="duotone" /></span><div><span>{ws("productProfile")}</span><h2>{ws("stainlessSteelWaterBottle")}</h2><p>{ws("vacuumInsulatedDomesticDrinkware")}</p></div><button type="button" className="button ghost" onClick={preview}>{ws("editProfile")}</button></div><div className="product-metrics"><div><span>{ws("standards")}</span><strong>2</strong><small>{ws("relevant")}</small></div><div><span>{ws("certification")}</span><strong className="metric-alert">{ws("review")}</strong><small>{ws("qCOCheck")}</small></div><div><span>{ws("tests")}</span><strong>6</strong><small>{ws("identified")}</small></div><div><span>{ws("laboratories")}</span><strong>3</strong><small>{ws("matching")}</small></div></div></div>
-      <section className="compliance-path-section"><div className="section-title-row"><div><h2>{ws("compliancePath")}</h2><p>{ws("eachCompletedDecisionUnlocksTheNextPartOf")}</p></div><span className="status attention"><Warning size={15} weight="fill" /> {ws("reviewCount", { count: 1 })}</span></div><div className="compliance-path">{steps.map((step, index) => { const StepIcon = step.icon; return <div className={`path-step ${step.state}`} key={step.label}><div className="path-node">{step.state === "done" ? <Check size={17} weight="bold" /> : <StepIcon size={18} />}</div><div><strong>{step.label}</strong><span>{step.detail}</span></div>{index < steps.length - 1 && <div className="path-connector" />}</div>; })}</div></section>
-      <div className="product-detail-layout"><section className="review-panel"><div className="review-panel-heading"><ShieldCheck size={24} /><div><h3>{ws("qCOApplicabilityNeedsVerification")}</h3><p>{ws("theResultDependsOnInsulationTypeAndThe")}</p></div></div><div className="clarification-form"><label htmlFor="construction">{ws("bottleConstruction")}</label><select id="construction" defaultValue="vacuum"><option value="vacuum">{ws("vacuumInsulatedDoubleWall")}</option><option value="single">{ws("singleWall")}</option><option value="other">{ws("otherConstruction")}</option></select><small>{ws("thisDetailIsUsedOnlyToNarrowThe")}</small></div><button type="button" className="button primary" onClick={preview}>{ws("recheckApplicability")}</button></section><section className="key-documents"><h3>{ws("keyDocuments")}</h3><button type="button" onClick={() => onNavigate("standards")}><FilePdf size={20} /><span><strong>IS 17803:2022</strong><small>{ws("recommendedStandard")}</small></span><ArrowSquareOut size={15} /></button><button type="button" onClick={preview}><ClipboardText size={20} /><span><strong>{ws("productManual2")}</strong><small>{ws("inspectionAndTesting")}</small></span><ArrowSquareOut size={15} /></button><button type="button" onClick={preview}><ShieldCheck size={20} /><span><strong>{ws("qualityControlOrder")}</strong><small>{ws("applicabilitySource")}</small></span><ArrowSquareOut size={15} /></button></section></div>
+      <PageHeading
+        title={ws("productCompliance")}
+        description={ws("turnAProductDescriptionIntoATraceableCompliance")}
+        action={
+          <button type="button" className="button primary" onClick={preview}>
+            <Plus size={17} /> {ws("addProduct")}
+          </button>
+        }
+      />
+      <div className="product-overview">
+        <div className="product-identity">
+          <span className="product-icon">
+            <Package size={28} weight="duotone" />
+          </span>
+          <div>
+            <span>{ws("productProfile")}</span>
+            <h2>{ws("stainlessSteelWaterBottle")}</h2>
+            <p>
+              {construction === "vacuum"
+                ? ws("constructionVacuumTitle")
+                : construction === "single"
+                ? ws("constructionSingleTitle")
+                : ws("constructionOtherTitle")}
+            </p>
+          </div>
+          <button type="button" className="button ghost" onClick={preview}>
+            {ws("editProfile")}
+          </button>
+        </div>
+        <div className="product-metrics">
+          <div>
+            <span>{ws("standards")}</span>
+            <strong>{construction === "single" ? 1 : 2}</strong>
+            <small>{ws("relevant")}</small>
+          </div>
+          <div>
+            <span>{ws("certification")}</span>
+            <strong className="metric-alert">{ws("review")}</strong>
+            <small>{ws("qCOCheck")}</small>
+          </div>
+          <div>
+            <span>{ws("tests")}</span>
+            <strong>{construction === "single" ? 4 : 6}</strong>
+            <small>{ws("identified")}</small>
+          </div>
+          <div>
+            <span>{ws("laboratories")}</span>
+            <strong>{construction === "single" ? 2 : 3}</strong>
+            <small>{ws("matching")}</small>
+          </div>
+        </div>
+      </div>
+
+      <section className="compliance-path-section">
+        <div className="section-title-row">
+          <div>
+            <h2>{ws("compliancePath")}</h2>
+            <p>{ws("eachCompletedDecisionUnlocksTheNextPartOf")}</p>
+          </div>
+          <span className="status attention">
+            <Warning size={15} weight="fill" /> {ws("reviewCount", { count: 1 })}
+          </span>
+        </div>
+        <div className="compliance-path">
+          {steps.map((step, index) => {
+            const StepIcon = step.icon;
+            return (
+              <div className={`path-step ${step.state}`} key={step.label}>
+                <div className="path-node">
+                  {step.state === "done" ? (
+                    <Check size={17} weight="bold" />
+                  ) : (
+                    <StepIcon size={18} />
+                  )}
+                </div>
+                <div>
+                  <strong>{step.label}</strong>
+                  <span>{step.detail}</span>
+                </div>
+                {index < steps.length - 1 && <div className="path-connector" />}
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <div className="product-detail-layout">
+        <section className="review-panel">
+          <div className="review-panel-heading">
+            <ShieldCheck size={24} />
+            <div>
+              <h3>{ws("qCOApplicabilityNeedsVerification")}</h3>
+              <p>{ws("theResultDependsOnInsulationTypeAndThe")}</p>
+            </div>
+          </div>
+          <div className="clarification-form">
+            <label id="construction-group-label">{ws("bottleConstruction")}</label>
+            <div
+              className="construction-segmented"
+              role="radiogroup"
+              aria-labelledby="construction-group-label"
+            >
+              <button
+                type="button"
+                role="radio"
+                aria-checked={construction === "vacuum"}
+                className={`construction-option-card ${construction === "vacuum" ? "active" : ""}`}
+                onClick={() => setConstruction("vacuum")}
+              >
+                <div className="option-indicator" />
+                <div className="option-copy">
+                  <strong>{ws("constructionVacuumTitle")}</strong>
+                  <small>{ws("constructionVacuumDesc")}</small>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                role="radio"
+                aria-checked={construction === "single"}
+                className={`construction-option-card ${construction === "single" ? "active" : ""}`}
+                onClick={() => setConstruction("single")}
+              >
+                <div className="option-indicator" />
+                <div className="option-copy">
+                  <strong>{ws("constructionSingleTitle")}</strong>
+                  <small>{ws("constructionSingleDesc")}</small>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                role="radio"
+                aria-checked={construction === "other"}
+                className={`construction-option-card ${construction === "other" ? "active" : ""}`}
+                onClick={() => setConstruction("other")}
+              >
+                <div className="option-indicator" />
+                <div className="option-copy">
+                  <strong>{ws("constructionOtherTitle")}</strong>
+                  <small>{ws("constructionOtherDesc")}</small>
+                </div>
+              </button>
+            </div>
+
+            {construction === "other" && (
+              <div className="custom-construction-wrap">
+                <label htmlFor="custom-construction-input">{ws("customConstructionPrompt")}</label>
+                <input
+                  id="custom-construction-input"
+                  type="text"
+                  value={customText}
+                  onChange={(e) => setCustomText(e.target.value)}
+                  placeholder={ws("customConstructionPlaceholder")}
+                />
+              </div>
+            )}
+
+            <small>{ws("thisDetailIsUsedOnlyToNarrowThe")}</small>
+          </div>
+          <button type="button" className="button primary" onClick={preview}>
+            {ws("recheckApplicability")}
+          </button>
+        </section>
+
+        <section className="key-documents">
+          <h3>{ws("keyDocuments")}</h3>
+          <button type="button" onClick={() => onNavigate("standards")}>
+            <FilePdf size={20} />
+            <span>
+              <strong>IS 17803:2022</strong>
+              <small>{ws("recommendedStandard")}</small>
+            </span>
+            <ArrowSquareOut size={15} />
+          </button>
+          <button type="button" onClick={preview}>
+            <ClipboardText size={20} />
+            <span>
+              <strong>{ws("productManual2")}</strong>
+              <small>{ws("inspectionAndTesting")}</small>
+            </span>
+            <ArrowSquareOut size={15} />
+          </button>
+          <button type="button" onClick={preview}>
+            <ShieldCheck size={20} />
+            <span>
+              <strong>{ws("qualityControlOrder")}</strong>
+              <small>{ws("applicabilitySource")}</small>
+            </span>
+            <ArrowSquareOut size={15} />
+          </button>
+        </section>
+      </div>
     </div>
   );
 }
@@ -379,13 +1082,159 @@ function useStandards() {
 }
 
 function StandardsView() {
-  const { preview } = useContext(PreviewContext);
+  const { preview, notify } = useContext(PreviewContext);
   const ws = useTranslations("Workspace");
   const standards = useStandards();
   const [search, setSearch] = useState("");
-  const filtered = standards.filter((standard) => `${standard.number} ${standard.title} ${standard.area}`.toLowerCase().includes(search.toLowerCase()));
+  const [category, setCategory] = useState<"all" | "products" | "safety">("all");
+  const [bookmarked, setBookmarked] = useState<string[]>([]);
+
+  const filtered = standards.filter((standard) => {
+    const matchesSearch = `${standard.number} ${standard.title} ${standard.area}`
+      .toLowerCase()
+      .includes(search.toLowerCase());
+    if (!matchesSearch) return false;
+    if (category === "products") {
+      return standard.number.includes("17803") || standard.number.includes("14756");
+    }
+    if (category === "safety") {
+      return standard.number.includes("10500") || standard.number.includes("9845");
+    }
+    return true;
+  });
+
+  function toggleBookmark(number: string) {
+    setBookmarked((prev) => {
+      const exists = prev.includes(number);
+      if (exists) {
+        notify(ws("standardRemoved"));
+        return prev.filter((item) => item !== number);
+      } else {
+        notify(ws("standardBookmarked"));
+        return [...prev, number];
+      }
+    });
+  }
+
   return (
-    <div className="workspace-page"><PageHeading title={ws("standardsExplorer")} description={ws("searchByISNumberProductKeywordIndustryOr")} /><div className="explorer-search"><MagnifyingGlass size={21} /><label htmlFor="standard-search" className="sr-only">{ws("searchIndianStandards")}</label><input id="standard-search" value={search} onChange={(event) => setSearch(event.target.value)} placeholder={ws("searchIndianStandardsProductsOrTopics")} /></div><div className="filter-bar"><button type="button" className="active" onClick={preview}>{ws("allStandards")}</button><button type="button" onClick={preview}>{ws("products")}</button><button type="button" onClick={preview}>{ws("industry")}</button><button type="button" onClick={preview}>{ws("topic")}</button><span className="filter-spacer" /><button type="button" onClick={preview}><SlidersHorizontal size={16} /> {ws("filters")}</button><button type="button" onClick={preview}><ArrowsDownUp size={16} /> {ws("relevance")}</button></div><div className="results-summary"><strong>{ws("standardsCount", { count: filtered.length })}</strong><span>{ws("illustrativeSearchResults")}</span></div><div className="standards-results">{filtered.length ? filtered.map((standard) => <article className="standard-result" key={standard.number}><div className="standard-file"><FilePdf size={24} weight="duotone" /></div><div className="standard-result-main"><div className="standard-result-meta"><span>{standard.match}</span><span>{standard.area}</span></div><h2>{standard.number}</h2><p>{standard.title}</p><div className="standard-submeta"><span><CheckCircle size={15} weight="fill" /> {standard.status}</span><span>{standard.revised}</span><span>{ws("relatedStandardsCount", { count: 3 })}</span></div></div><div className="standard-result-actions"><IconButton label={ws("saveStandard", { standard: standard.number })}><BookmarkSimple size={18} /></IconButton><button type="button" className="button secondary" onClick={preview}>{ws("viewStandard")}</button></div></article>) : <div className="empty-state"><MagnifyingGlass size={28} /><h2>{ws("noMatchingStandards")}</h2><p>{ws("tryAProductNameIndustryTermOrA")}</p><button type="button" className="button secondary" onClick={() => setSearch("")}>{ws("clearSearch")}</button></div>}</div></div>
+    <div className="workspace-page">
+      <PageHeading
+        title={ws("standardsExplorer")}
+        description={ws("searchByISNumberProductKeywordIndustryOr")}
+      />
+      <div className="explorer-search">
+        <MagnifyingGlass size={21} />
+        <label htmlFor="standard-search" className="sr-only">
+          {ws("searchIndianStandards")}
+        </label>
+        <input
+          id="standard-search"
+          value={search}
+          onChange={(event) => setSearch(event.target.value)}
+          placeholder={ws("searchIndianStandardsProductsOrTopics")}
+        />
+      </div>
+
+      <div className="filter-bar">
+        <button
+          type="button"
+          className={category === "all" ? "active" : ""}
+          onClick={() => setCategory("all")}
+        >
+          {ws("standardsCategoryAll")}
+        </button>
+        <button
+          type="button"
+          className={category === "products" ? "active" : ""}
+          onClick={() => setCategory("products")}
+        >
+          {ws("standardsCategoryProducts")}
+        </button>
+        <button
+          type="button"
+          className={category === "safety" ? "active" : ""}
+          onClick={() => setCategory("safety")}
+        >
+          {ws("standardsCategorySafety")}
+        </button>
+        <span className="filter-spacer" />
+        <button type="button" onClick={preview}>
+          <SlidersHorizontal size={16} /> {ws("filters")}
+        </button>
+        <button type="button" onClick={preview}>
+          <ArrowsDownUp size={16} /> {ws("relevance")}
+        </button>
+      </div>
+
+      <div className="results-summary">
+        <strong>{ws("standardsCount", { count: filtered.length })}</strong>
+        <span>{ws("illustrativeSearchResults")}</span>
+      </div>
+
+      <div className="standards-results">
+        {filtered.length ? (
+          filtered.map((standard) => {
+            const isSaved = bookmarked.includes(standard.number);
+            return (
+              <article className="standard-result" key={standard.number}>
+                <div className="standard-file">
+                  <FilePdf size={24} weight="duotone" />
+                </div>
+                <div className="standard-result-main">
+                  <div className="standard-result-meta">
+                    <span>{standard.match}</span>
+                    <span>{standard.area}</span>
+                  </div>
+                  <h2>{standard.number}</h2>
+                  <p>{standard.title}</p>
+                  <div className="standard-submeta">
+                    <span>
+                      <CheckCircle size={15} weight="fill" /> {standard.status}
+                    </span>
+                    <span>{standard.revised}</span>
+                    <span>{ws("relatedStandardsCount", { count: 3 })}</span>
+                  </div>
+                </div>
+                <div className="standard-result-actions">
+                  <IconButton
+                    label={ws("saveStandard", { standard: standard.number })}
+                    onClick={() => toggleBookmark(standard.number)}
+                  >
+                    <BookmarkSimple
+                      size={18}
+                      weight={isSaved ? "fill" : "regular"}
+                    />
+                  </IconButton>
+                  <button
+                    type="button"
+                    className="button secondary"
+                    onClick={preview}
+                  >
+                    {ws("viewStandard")}
+                  </button>
+                </div>
+              </article>
+            );
+          })
+        ) : (
+          <div className="empty-state">
+            <MagnifyingGlass size={28} />
+            <h2>{ws("noMatchingStandards")}</h2>
+            <p>{ws("tryAProductNameIndustryTermOrA")}</p>
+            <button
+              type="button"
+              className="button secondary"
+              onClick={() => {
+                setSearch("");
+                setCategory("all");
+              }}
+            >
+              {ws("clearSearch")}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -414,23 +1263,403 @@ function useLabs() {
 }
 
 function LabsView() {
-  const { preview } = useContext(PreviewContext);
+  const { preview, notify } = useContext(PreviewContext);
   const ws = useTranslations("Workspace");
   const format = useFormatter();
   const labs = useLabs();
-  return <div className="workspace-page labs-page"><PageHeading title={ws("testingLaboratories")} description={ws("findRecognisedLaboratoriesByProductStandardTestAnd")} /><div className="lab-search-panel"><label htmlFor="lab-search">{ws("whatProductDoYouNeedTested")}</label><div className="lab-search-row"><MagnifyingGlass size={21} /><input id="lab-search" defaultValue={ws("stainlessSteelWaterBottle")} /><button type="button" className="button primary" onClick={preview}>{ws("findLaboratories")}</button></div><div className="lab-filters"><button type="button" onClick={preview}><MapPin size={16} /> {ws("delhiNCR")} <CaretDown size={13} /></button><button type="button" onClick={preview}><Books size={16} /> IS 17803 <CaretDown size={13} /></button><button type="button" onClick={preview}><Flask size={16} /> {ws("allTests")} <CaretDown size={13} /></button><button type="button" onClick={preview}><SlidersHorizontal size={16} /> {ws("moreFilters")}</button></div></div><div className="lab-result-layout"><div className="lab-list"><div className="results-summary"><strong>{ws("matchingLabsCount", { count: labs.length })}</strong><span>{ws("sortedByCapabilityMatch")}</span></div>{labs.map((lab, index) => <article className="lab-result" key={lab.name}><div className="lab-heading"><span className="lab-logo"><Buildings size={22} /></span><div><h2>{lab.name}</h2><p><MapPin size={15} /> {lab.location} <span>{lab.distance}</span></p></div><label className="compare-check"><input type="checkbox" /> {ws("compare")}</label></div><div className="lab-capabilities"><div><span>{ws("recognisedStandards")}</span><p>{lab.standards.map((item) => <strong key={item}>{item}</strong>)}</p></div><div><span>{ws("availableTests")}</span><p>{lab.tests.length > 2 ? ws("moreTests", { tests: format.list(lab.tests.slice(0, 2)), count: lab.tests.length - 2 }) : format.list(lab.tests)}</p></div></div><div className={`verification-line ${index === 2 ? "caution" : ""}`}>{index === 2 ? <WarningCircle size={16} /> : <SealCheck size={16} weight="fill" />} {lab.verified}</div><div className="lab-actions"><button type="button" className="button secondary" onClick={preview}>{ws("viewLab")}</button><button type="button" className="button ghost" onClick={preview}><Phone size={16} /> {ws("contact")}</button><button type="button" className="button ghost" onClick={preview}><NavigationArrow size={16} /> {ws("directions")}</button></div></article>)}</div><div className="lab-map" aria-label={ws("mapPreview")}><MapTrifold size={40} weight="duotone" /><strong>{ws("mapView")}</strong><p>{ws("threeMatchingLaboratoriesAreVisibleInDelhiNCR")}</p><div className="map-pin pin-one"><span>1</span></div><div className="map-pin pin-two"><span>2</span></div><div className="map-pin pin-three"><span>3</span></div></div></div></div>;
+
+  const [search, setSearch] = useState("");
+  const [locFilter, setLocFilter] = useState<"all" | "delhi" | "up">("all");
+  const [stdFilter, setStdFilter] = useState<"all" | "17803" | "14756">("all");
+  const [testFilter, setTestFilter] = useState<"all" | "thermal" | "chemical">("all");
+  const [compareList, setCompareList] = useState<string[]>([]);
+
+  function toggleCompare(name: string) {
+    setCompareList((prev) =>
+      prev.includes(name) ? prev.filter((item) => item !== name) : [...prev, name]
+    );
+  }
+
+  const filteredLabs = labs.filter((lab) => {
+    if (search && !lab.name.toLowerCase().includes(search.toLowerCase())) return false;
+    if (locFilter === "delhi" && !lab.location.toLowerCase().includes("delhi")) return false;
+    if (locFilter === "up" && !lab.location.toLowerCase().includes("pradesh")) return false;
+    if (stdFilter === "17803" && !lab.standards.some((s) => s.includes("17803"))) return false;
+    if (stdFilter === "14756" && !lab.standards.some((s) => s.includes("14756"))) return false;
+    if (
+      testFilter === "thermal" &&
+      !lab.tests.some(
+        (t) =>
+          t.toLowerCase().includes("thermal") || t.toLowerCase().includes("performance")
+      )
+    )
+      return false;
+    if (
+      testFilter === "chemical" &&
+      !lab.tests.some(
+        (t) =>
+          t.toLowerCase().includes("chemical") || t.toLowerCase().includes("material")
+      )
+    )
+      return false;
+    return true;
+  });
+
+  return (
+    <div className="workspace-page labs-page">
+      <PageHeading
+        title={ws("testingLaboratories")}
+        description={ws("findRecognisedLaboratoriesByProductStandardTestAnd")}
+      />
+      <div className="lab-search-panel">
+        <label htmlFor="lab-search">{ws("whatProductDoYouNeedTested")}</label>
+        <div className="lab-search-row">
+          <MagnifyingGlass size={21} />
+          <input
+            id="lab-search"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder={ws("stainlessSteelWaterBottle")}
+          />
+          <button type="button" className="button primary" onClick={preview}>
+            {ws("findLaboratories")}
+          </button>
+        </div>
+
+        <div className="lab-filters">
+          <button
+            type="button"
+            className={`lab-filter-chip ${locFilter !== "all" ? "active" : ""}`}
+            onClick={() =>
+              setLocFilter((prev) =>
+                prev === "all" ? "delhi" : prev === "delhi" ? "up" : "all"
+              )
+            }
+          >
+            <MapPin size={16} />{" "}
+            {locFilter === "all"
+              ? ws("filterAllLocations")
+              : locFilter === "delhi"
+              ? ws("delhiNCR")
+              : ws("ghaziabadUttarPradesh")}{" "}
+            <CaretDown size={13} />
+          </button>
+
+          <button
+            type="button"
+            className={`lab-filter-chip ${stdFilter !== "all" ? "active" : ""}`}
+            onClick={() =>
+              setStdFilter((prev) =>
+                prev === "all" ? "17803" : prev === "17803" ? "14756" : "all"
+              )
+            }
+          >
+            <Books size={16} />{" "}
+            {stdFilter === "all"
+              ? ws("filterAllStandards")
+              : stdFilter === "17803"
+              ? "IS 17803"
+              : "IS 14756"}{" "}
+            <CaretDown size={13} />
+          </button>
+
+          <button
+            type="button"
+            className={`lab-filter-chip ${testFilter !== "all" ? "active" : ""}`}
+            onClick={() =>
+              setTestFilter((prev) =>
+                prev === "all" ? "thermal" : prev === "thermal" ? "chemical" : "all"
+              )
+            }
+          >
+            <Flask size={16} />{" "}
+            {testFilter === "all"
+              ? ws("filterAllTests")
+              : testFilter === "thermal"
+              ? ws("filterThermal")
+              : ws("filterChemical")}{" "}
+            <CaretDown size={13} />
+          </button>
+
+          <button type="button" onClick={preview}>
+            <SlidersHorizontal size={16} /> {ws("moreFilters")}
+          </button>
+        </div>
+      </div>
+
+      <div className="lab-result-layout">
+        <div className="lab-list">
+          <div className="results-summary">
+            <strong>{ws("matchingLabsCount", { count: filteredLabs.length })}</strong>
+            <span>{ws("sortedByCapabilityMatch")}</span>
+          </div>
+          {filteredLabs.map((lab, index) => (
+            <article className="lab-result" key={lab.name}>
+              <div className="lab-heading">
+                <span className="lab-logo">
+                  <Buildings size={22} />
+                </span>
+                <div>
+                  <h2>{lab.name}</h2>
+                  <p>
+                    <MapPin size={15} /> {lab.location} <span>{lab.distance}</span>
+                  </p>
+                </div>
+                <label className="compare-check">
+                  <input
+                    type="checkbox"
+                    checked={compareList.includes(lab.name)}
+                    onChange={() => toggleCompare(lab.name)}
+                  />{" "}
+                  {ws("compare")}
+                </label>
+              </div>
+              <div className="lab-capabilities">
+                <div>
+                  <span>{ws("recognisedStandards")}</span>
+                  <p>
+                    {lab.standards.map((item) => (
+                      <strong key={item}>{item}</strong>
+                    ))}
+                  </p>
+                </div>
+                <div>
+                  <span>{ws("availableTests")}</span>
+                  <p>
+                    {lab.tests.length > 2
+                      ? ws("moreTests", {
+                          tests: format.list(lab.tests.slice(0, 2)),
+                          count: lab.tests.length - 2,
+                        })
+                      : format.list(lab.tests)}
+                  </p>
+                </div>
+              </div>
+              <div className={`verification-line ${index === 2 ? "caution" : ""}`}>
+                {index === 2 ? (
+                  <WarningCircle size={16} />
+                ) : (
+                  <SealCheck size={16} weight="fill" />
+                )}{" "}
+                {lab.verified}
+              </div>
+              <div className="lab-actions">
+                <button type="button" className="button secondary" onClick={preview}>
+                  {ws("viewLab")}
+                </button>
+                <button type="button" className="button ghost" onClick={preview}>
+                  <Phone size={16} /> {ws("contact")}
+                </button>
+                <button type="button" className="button ghost" onClick={preview}>
+                  <NavigationArrow size={16} /> {ws("directions")}
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
+
+        <div className="lab-map" aria-label={ws("mapPreview")}>
+          <MapTrifold size={40} weight="duotone" />
+          <strong>{ws("mapView")}</strong>
+          <p>{ws("threeMatchingLaboratoriesAreVisibleInDelhiNCR")}</p>
+          <div className="map-pin pin-one">
+            <span>1</span>
+          </div>
+          <div className="map-pin pin-two">
+            <span>2</span>
+          </div>
+          <div className="map-pin pin-three">
+            <span>3</span>
+          </div>
+        </div>
+      </div>
+
+      {compareList.length > 0 && (
+        <div className="lab-compare-tray" role="region" aria-label={ws("compare")}>
+          <div className="compare-info">
+            <Flask size={20} weight="fill" />
+            <strong>{ws("compareTrayCount", { count: compareList.length })}</strong>
+            <span>{compareList.join(" • ")}</span>
+          </div>
+          <div className="compare-actions">
+            <button
+              type="button"
+              className="button primary"
+              onClick={() => notify(ws("compareNow"))}
+            >
+              {ws("compareNow")}
+            </button>
+            <button
+              type="button"
+              className="button ghost"
+              onClick={() => setCompareList([])}
+            >
+              {ws("clearCompare")}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 function HallmarkingView() {
-  const { preview, notify } = useContext(PreviewContext);
+  const { preview } = useContext(PreviewContext);
   const ws = useTranslations("Workspace");
+  const [huidInput, setHuidInput] = useState("");
+  const [huidVerified, setHuidVerified] = useState(false);
+  const [huidError, setHuidError] = useState(false);
+
   const entries = [
-    { title: ws("verifyHallmarkInformation"), description: ws("understandTheMarksOnAHallmarkedArticleAnd"), icon: SealCheck, action: ws("verifyHallmark") },
-    { title: ws("understandHallmarking"), description: ws("learnWhatHallmarkingCoversAndWhatEachMark"), icon: Info, action: ws("readTheGuide") },
-    { title: ws("findAHallmarkingCentre"), description: ws("locateARecognisedAssayingAndHallmarkingCentreNear"), icon: MapPin, action: ws("findACentre") },
-    { title: ws("consumerGuidance"), description: ws("knowWhatToCheckBeforeBuyingAndHow"), icon: ShieldCheck, action: ws("viewGuidance") },
+    {
+      title: ws("verifyHallmarkInformation"),
+      description: ws("understandTheMarksOnAHallmarkedArticleAnd"),
+      icon: SealCheck,
+      action: ws("verifyHallmark"),
+    },
+    {
+      title: ws("understandHallmarking"),
+      description: ws("learnWhatHallmarkingCoversAndWhatEachMark"),
+      icon: Info,
+      action: ws("readTheGuide"),
+    },
+    {
+      title: ws("findAHallmarkingCentre"),
+      description: ws("locateARecognisedAssayingAndHallmarkingCentreNear"),
+      icon: MapPin,
+      action: ws("findACentre"),
+    },
+    {
+      title: ws("consumerGuidance"),
+      description: ws("knowWhatToCheckBeforeBuyingAndHow"),
+      icon: ShieldCheck,
+      action: ws("viewGuidance"),
+    },
   ];
-  return <div className="workspace-page hallmarking-page"><PageHeading title={ws("hallmarkingMadeClearer")} description={ws("simpleGuidanceForConsumersJewellersAndHallmarkingServices")} /><section className="hallmark-verify"><div><DiamondsFour size={34} weight="duotone" /><h2>{ws("checkAHallmarkedArticle")}</h2><p>{ws("enterTheSixCharacterHUIDPrintedOnThe")}</p></div><form onSubmit={(event) => { event.preventDefault(); notify(ws("useTheBISCareAppOrOfficialService")); }}><label htmlFor="huid">{ws("hUIDNumber")}</label><div><input id="huid" placeholder={ws("forExampleAB12CD")} maxLength={6} autoComplete="off" autoCapitalize="characters" /><button type="submit" className="button primary">{ws("verifyHUID")}</button></div><small>{ws("useTheBISCareAppOrOfficialService")}</small></form></section><div className="hallmark-entry-grid">{entries.map((entry) => { const EntryIcon = entry.icon; return <button type="button" key={entry.title} onClick={preview}><span className="entry-icon"><EntryIcon size={25} /></span><span><strong>{entry.title}</strong><small>{entry.description}</small><em>{entry.action} <ArrowRight size={15} /></em></span></button>; })}</div><section className="hallmark-anatomy"><div><h2>{ws("whatAHallmarkTellsYou")}</h2><p>{ws("threeMarksHelpIdentifyPurityTheBISSystem")}</p></div><div className="hallmark-marks"><span><SealCheck size={24} weight="fill" /><strong>{ws("bISMark")}</strong><small>{ws("standardsConformitySystem")}</small></span><span><strong className="purity-mark">22K916</strong><small>{ws("purityAndFineness")}</small></span><span><IdentificationBadge size={24} /><strong>HUID</strong><small>{ws("uniqueArticleIdentifier")}</small></span></div></section></div>;
+
+  function handleVerify(event: FormEvent) {
+    event.preventDefault();
+    const clean = huidInput.trim().toUpperCase();
+    if (clean.length === 6 && /^[A-Z0-9]{6}$/.test(clean)) {
+      setHuidVerified(true);
+      setHuidError(false);
+    } else {
+      setHuidError(true);
+      setHuidVerified(false);
+    }
+  }
+
+  return (
+    <div className="workspace-page hallmarking-page">
+      <PageHeading
+        title={ws("hallmarkingMadeClearer")}
+        description={ws("simpleGuidanceForConsumersJewellersAndHallmarkingServices")}
+      />
+      <section className="hallmark-verify">
+        <div>
+          <DiamondsFour size={34} weight="duotone" />
+          <h2>{ws("checkAHallmarkedArticle")}</h2>
+          <p>{ws("enterTheSixCharacterHUIDPrintedOnThe")}</p>
+        </div>
+        <form onSubmit={handleVerify}>
+          <label htmlFor="huid">{ws("hUIDNumber")}</label>
+          <div>
+            <input
+              id="huid"
+              value={huidInput}
+              onChange={(e) => {
+                setHuidInput(e.target.value.toUpperCase());
+                if (huidError) setHuidError(false);
+              }}
+              placeholder={ws("forExampleAB12CD")}
+              maxLength={6}
+              autoComplete="off"
+              autoCapitalize="characters"
+            />
+            <button type="submit" className="button primary">
+              {ws("verifyHUID")}
+            </button>
+          </div>
+          {huidError && (
+            <p className="status attention" style={{ marginTop: "0.5rem" }}>
+              <Warning size={15} weight="fill" /> {ws("huidInvalidFormat")}
+            </p>
+          )}
+          <small>{ws("useTheBISCareAppOrOfficialService")}</small>
+        </form>
+
+        {huidVerified && (
+          <div className="huid-verification-result" role="region" aria-label={ws("huidVerifiedTitle")}>
+            <div className="result-header">
+              <SealCheck size={26} weight="fill" />
+              <div>
+                <strong>{ws("huidVerifiedTitle")}</strong>
+                <small>HUID {huidInput}</small>
+              </div>
+            </div>
+            <div className="result-details">
+              <p>{ws("huidArticleSample")}</p>
+              <p>{ws("huidCentreSample")}</p>
+              <p>{ws("huidPuritySample")}</p>
+            </div>
+            <button
+              type="button"
+              className="button ghost compact-btn"
+              onClick={() => {
+                setHuidVerified(false);
+                setHuidInput("");
+              }}
+            >
+              {ws("clearCompare")}
+            </button>
+          </div>
+        )}
+      </section>
+
+      <div className="hallmark-entry-grid">
+        {entries.map((entry) => {
+          const EntryIcon = entry.icon;
+          return (
+            <button type="button" key={entry.title} onClick={preview}>
+              <span className="entry-icon">
+                <EntryIcon size={25} />
+              </span>
+              <span>
+                <strong>{entry.title}</strong>
+                <small>{entry.description}</small>
+                <em>
+                  {entry.action} <ArrowRight size={15} />
+                </em>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <section className="hallmark-anatomy">
+        <div>
+          <h2>{ws("whatAHallmarkTellsYou")}</h2>
+          <p>{ws("threeMarksHelpIdentifyPurityTheBISSystem")}</p>
+        </div>
+        <div className="hallmark-marks">
+          <span>
+            <SealCheck size={24} weight="fill" />
+            <strong>{ws("bISMark")}</strong>
+            <small>{ws("standardsConformitySystem")}</small>
+          </span>
+          <span>
+            <strong className="purity-mark">22K916</strong>
+            <small>{ws("purityAndFineness")}</small>
+          </span>
+          <span>
+            <IdentificationBadge size={24} />
+            <strong>HUID</strong>
+            <small>{ws("uniqueArticleIdentifier")}</small>
+          </span>
+        </div>
+      </section>
+    </div>
+  );
 }
 
 function HistoryView() {
@@ -586,7 +1815,7 @@ export function BISIntelligence() {
   return (
     <PreviewContext.Provider value={{ notify: setNotice, preview, downloadReport }}>
       <a href="#main-content" className="skip-link">{common("skipToContent")}</a>
-      {screen === "landing" ? <Landing onEnter={enterAssistant} onNavigate={navigate} onSignIn={openAuth} onTheme={toggleTheme} dark={dark} /> : <div className="app-shell"><div className={`mobile-nav-scrim ${mobileNavOpen ? "open" : ""}`} onClick={() => setMobileNavOpen(false)} /><div className={`sidebar-wrap ${mobileNavOpen ? "mobile-open" : ""}`}><AppSidebar active={view} onChange={navigate} collapsed={sidebarCollapsed} onCollapse={() => setSidebarCollapsed((value) => !value)} onHome={goHome} onSignIn={openAuth} /></div><div className="app-main"><AppTopbar title={viewTitle} onMenu={() => setMobileNavOpen(true)} onTheme={toggleTheme} dark={dark} onSignIn={openAuth} /><div className={`workspace ${view === "assistant" && sourceOpen ? "with-evidence" : ""}`}><main id="main-content" tabIndex={-1} className="workspace-main"><p className="preview-notice"><Info size={17} aria-hidden="true" />{ws("previewNotice")}</p>{view === "assistant" ? <AssistantView initialQuestion={question ?? ws("exampleQuestion")} loading={loading} onAsk={enterAssistant} onCitation={openCitation} onOpenView={navigate} /> : <GenericContent view={view} onNavigate={navigate} />}</main>{view === "assistant" && sourceOpen && <EvidencePanel selected={selectedSource} onSelect={setSelectedSource} onClose={() => setSourceOpen(false)} onOpenDocument={() => setDocumentOpen(true)} />}{view === "assistant" && !sourceOpen && !loading && <button type="button" className="floating-sources-button" onClick={() => setSourceOpen(true)}><Files size={17} /> {ws("sourcesCount", { count: 3 })}</button>}</div></div><nav className="mobile-bottom-nav" aria-label={ws("mobileNavigation")}>{[navItems[0], navItems[1], navItems[2], navItems[4]].map((item) => { const ItemIcon = item.icon; return <button type="button" key={item.id} className={view === item.id ? "active" : ""} onClick={() => navigate(item.id)}><ItemIcon size={20} weight={view === item.id ? "fill" : "regular"} /><span>{navigation(`${item.labelKey}Short`)}</span></button>; })}<button type="button" onClick={() => setMobileNavOpen(true)}><List size={20} /><span>{navigation("more")}</span></button></nav></div>}
+      {screen === "landing" ? <Landing onEnter={enterAssistant} onNavigate={navigate} onSignIn={openAuth} onTheme={toggleTheme} dark={dark} /> : <div className="app-shell"><div className={`mobile-nav-scrim ${mobileNavOpen ? "open" : ""}`} onClick={() => setMobileNavOpen(false)} /><div className={`sidebar-wrap ${mobileNavOpen ? "mobile-open" : ""}`}><AppSidebar active={view} onChange={navigate} collapsed={sidebarCollapsed} onCollapse={() => setSidebarCollapsed((value) => !value)} onHome={goHome} onSignIn={openAuth} /></div><div className="app-main"><AppTopbar title={viewTitle} onMenu={() => setMobileNavOpen(true)} onTheme={toggleTheme} dark={dark} onSignIn={openAuth} /><div className={`workspace ${view === "assistant" && sourceOpen ? "with-evidence" : ""}`}><main id="main-content" tabIndex={-1} className="workspace-main"><p className="preview-notice"><Info size={17} aria-hidden="true" />{ws("previewNotice")}</p>{view === "assistant" ? <AssistantView key={question ?? "default"} initialQuestion={question ?? ws("exampleQuestion")} loading={loading} onAsk={enterAssistant} onCitation={openCitation} onOpenView={navigate} /> : <GenericContent view={view} onNavigate={navigate} />}</main>{view === "assistant" && sourceOpen && <EvidencePanel selected={selectedSource} onSelect={setSelectedSource} onClose={() => setSourceOpen(false)} onOpenDocument={() => setDocumentOpen(true)} />}{view === "assistant" && !sourceOpen && !loading && <button type="button" className="floating-sources-button" onClick={() => setSourceOpen(true)}><Files size={17} /> {ws("sourcesCount", { count: 3 })}</button>}</div></div><nav className="mobile-bottom-nav" aria-label={ws("mobileNavigation")}>{[navItems[0], navItems[1], navItems[2], navItems[4]].map((item) => { const ItemIcon = item.icon; return <button type="button" key={item.id} className={view === item.id ? "active" : ""} onClick={() => navigate(item.id)}><ItemIcon size={20} weight={view === item.id ? "fill" : "regular"} /><span>{navigation(`${item.labelKey}Short`)}</span></button>; })}<button type="button" onClick={() => setMobileNavOpen(true)}><List size={20} /><span>{navigation("more")}</span></button></nav></div>}
       {documentOpen && <DocumentViewer sourceId={selectedSource} onClose={closeDocument} />}
       {notice && <div className="preview-toast" role="status"><span>{notice}</span><IconButton label={ws("closeNotification")} onClick={() => setNotice("")}><X size={18} /></IconButton></div>}
     </PreviewContext.Provider>
