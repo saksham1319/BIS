@@ -76,7 +76,7 @@
     background: var(--surface);
     color: var(--navy);
     font-weight: 700;
-    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--line-strong);
 }
 
 .chip-row {
@@ -777,8 +777,7 @@ button.chip:hover {
 }
 
 .centre-card:hover {
-    border-color: var(--line-strong);
-    box-shadow: var(--shadow-sm);
+    border-color: var(--navy);
 }
 
 .centre-mark {
@@ -1013,9 +1012,9 @@ button.chip:hover {
     display: grid;
     justify-items: center;
     gap: 8px;
+    border: 1.5px solid var(--line-strong);
     border-radius: var(--radius-lg);
     background: var(--surface);
-    box-shadow: var(--shadow-lg);
     text-align: center;
 }
 

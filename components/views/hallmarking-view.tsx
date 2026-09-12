@@ -1,19 +1,19 @@
 "use client";
 
 import {
+    AlertCircle,
     Barcode,
-    DiamondsFour,
+    CheckCircle2,
+    Gem,
     Hash,
-    MagnifyingGlass,
     MapPin,
     Phone,
-    SealCheck,
+    Search,
     ShieldCheck,
-    Storefront,
-    WarningCircle,
+    Store,
     X,
     XCircle,
-} from "@phosphor-icons/react";
+} from "lucide-react";
 import {FormEvent, useCallback, useMemo, useState} from "react";
 import {centreStates, hallmarkingCentres} from "@/lib/bis/data";
 import type {HallmarkingCentre} from "@/lib/bis/types";
@@ -115,10 +115,10 @@ export function HallmarkingView() {
             </div>
 
             <section className="hallmark-verify" aria-labelledby="huid-heading">
-                <span className="demo-flag"><WarningCircle size={13} weight="fill"/> Demonstration only — not a BIS registry lookup</span>
+                <span className="demo-flag"><AlertCircle size={13}/> Demonstration only — not a BIS registry lookup</span>
 
                 <div>
-                    <DiamondsFour size={34} weight="duotone"/>
+                    <Gem size={34}/>
                     <h2 id="huid-heading">Check a HUID</h2>
                     <p>
                         Enter the six-character HUID printed on a hallmarked article. This demo returns a simulated
@@ -149,7 +149,7 @@ export function HallmarkingView() {
                     </div>
                     {validation
                         ? <p className="huid-error" id="huid-error" role="alert">
-                            <XCircle size={14} weight="fill"/> {validation}
+                            <XCircle size={14}/> {validation}
                         </p>
                         : <small id="huid-hint">Six letters or digits. Use the official BIS Care app for a real
                             verification.</small>}
@@ -169,7 +169,7 @@ export function HallmarkingView() {
 
                 <div className="centre-toolbar">
                     <div className="explorer-search">
-                        <MagnifyingGlass size={19}/>
+                        <Search size={19}/>
                         <label htmlFor="centre-search" className="sr-only">Search hallmarking centres</label>
                         <input
                             id="centre-search"
@@ -237,7 +237,7 @@ export function HallmarkingView() {
                     <div className="centre-list">
                         {centres.map((centre) => (
                             <article className="centre-card" key={centre.id}>
-                                <span className="centre-mark"><Storefront size={20}/></span>
+                                <span className="centre-mark"><Store size={20}/></span>
                                 <div>
                                     <h3>{centre.name}</h3>
                                     <p className="centre-place"><MapPin size={13}/> {centre.city}, {centre.state}</p>
@@ -268,7 +268,7 @@ export function HallmarkingView() {
                 </p>
                 <div className="mark-grid">
                     <div className="mark-card">
-                        <span><SealCheck size={20} weight="fill"/></span>
+                        <span><CheckCircle2 size={20}/></span>
                         <strong>1. The BIS logo</strong>
                         <p>
                             A small triangular mark. It says the article was tested and marked at a recognised
@@ -306,7 +306,7 @@ function HuidResult({outcome}: { outcome: HuidOutcome }) {
         return (
             <div className="huid-result is-invalid" role="status">
                 <div className="huid-result-head">
-                    <XCircle size={22} weight="fill"/>
+                    <XCircle size={22}/>
                     <strong>Format not valid</strong>
                     <span className="demo-flag">Demo result</span>
                 </div>
@@ -322,7 +322,7 @@ function HuidResult({outcome}: { outcome: HuidOutcome }) {
         return (
             <div className="huid-result is-missing" role="status">
                 <div className="huid-result-head">
-                    <WarningCircle size={22} weight="fill"/>
+                    <AlertCircle size={22}/>
                     <strong>No demo record for {outcome.input}</strong>
                     <span className="demo-flag">Demo result</span>
                 </div>
@@ -338,7 +338,7 @@ function HuidResult({outcome}: { outcome: HuidOutcome }) {
     return (
         <div className="huid-result is-verified" role="status">
             <div className="huid-result-head">
-                <SealCheck size={22} weight="fill"/>
+                <CheckCircle2 size={22}/>
                 <strong>Demo record found for {outcome.input}</strong>
                 <span className="demo-flag">Demo result</span>
             </div>

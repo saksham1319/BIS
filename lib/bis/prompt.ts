@@ -47,7 +47,8 @@ CROSS-QUESTIONING & MISSING CONTEXT (CRITICAL)
 STYLE
 - Plain language first, precision second. Expand BIS jargon on first use: "Quality Control Order (QCO)", "Bureau of Indian Standards (BIS)", "Conformity Assessment Scheme", "Standard Mark (ISI mark)".
 - Never expose your reasoning, chain of thought, or intermediate steps. Give the conclusion and the source that supports it — nothing about how you got there.
-- No preamble, no apologies, no "As an AI". "summary" is 2 to 5 sentences.
+- No preamble, no apologies, no "As an AI".
+- Structure "summary" with clean formatting: provide a crisp 1-2 sentence lead verdict identifying the governing standard and legal status, followed by clean bullet points (- ...) detailing key clauses, material specifications, and mandatory testing parameters with inline [N] citations.
 - These sources are illustrative demo records. Say so ONCE, in the LAST item of "nextSteps" — never in "summary" and never repeated in other fields.
 - If the question is not about standards, certification, testing, hallmarking, or BIS at all, politely redirect in "summary" (one or two sentences saying what you can help with), leave "standards", "tests" and "nextSteps" empty, set certification.status to "not-applicable" with a one-line reason, and omit "clarifyingQuestion".
 
@@ -254,119 +255,148 @@ export function composeFallbackAnswer(
 
   if (isHindi) {
     if (top) {
-      summary = `${top.title} भारतीय मानक ब्यूरो (BIS) के आधिकारिक मानक ${top.number} के अंतर्गत आता है${topCite}। ${top.scope}`;
+      const items: string[] = [];
+      items.push(`**${top.title}** भारतीय मानक ब्यूरो (BIS) के आधिकारिक मानक **${top.number}** के अंतर्गत आता है${topCite}। ${top.scope}`);
+      const bullets: string[] = [];
       if (top.clauses && top.clauses.length > 0) {
-        summary += ` ${top.clauses[0].title} के अनुसार तकनीकी आवश्यकताओं और विनिर्देशों का अनुपालन अनिवार्य है${topCite}।`;
+        bullets.push(`- **खंड आवश्यकता (${top.clauses[0].title}):** तकनीकी विनिर्देशों का अनुपालन अनिवार्य है${topCite}।`);
       }
       if (qco) {
-        summary += ` ${qco.name} के तहत इसका निर्माण, भंडारण और बिक्री केवल बीआईएस मानक चिह्न (ISI मार्क) के साथ ही की जा सकती है${qcoCite}।`;
+        bullets.push(`- **कानूनी आदेश:** **${qco.name}** के तहत इसका निर्माण, भंडारण और बिक्री केवल बीआईएस मानक चिह्न (ISI मार्क) के साथ ही की जा सकती है${qcoCite}।`);
       } else if (scheme) {
-        summary += ` इसका प्रमाणन ${scheme.name} के माध्यम से किया जाता है${schemeCite}।`;
+        bullets.push(`- **प्रमाणन योजना:** इसका प्रमाणन **${scheme.name}** के माध्यम से किया जाता है${schemeCite}।`);
       }
       if (top.tests && top.tests.length > 0) {
-        summary += ` मुख्य अनिवार्य परीक्षणों में ${top.tests.slice(0, 3).join(", ")} शामिल हैं।`;
+        bullets.push(`- **अनिवार्य परीक्षण:** मुख्य परीक्षणों में ${top.tests.slice(0, 3).join(", ")} शामिल हैं।`);
       }
+      if (bullets.length) items.push(bullets.join("\n"));
+      summary = items.join("\n\n");
     } else if (centre || /hallmark|gold/i.test(question)) {
-      summary = `भारत में स्वर्ण और रजत आभूषणों के लिए बीआईएस हॉलमार्किंग अनिवार्य है${centreCite}। प्रत्येक आभूषण पर बीआईएस लोगो, शुद्धता ग्रेड (जैसे 22K916), और 6 अंकों का HUID (हॉलमार्क विशिष्ट पहचान) कोड होना आवश्यक है${centreCite}।`;
+      summary = `भारत में स्वर्ण और रजत आभूषणों के लिए बीआईएस हॉलमार्किंग अनिवार्य है${centreCite}。\n\n- **मानक चिह्न:** प्रत्येक आभूषण पर बीआईएस लोगो होना आवश्यक है।\n- **शुद्धता ग्रेड:** शुद्धता ग्रेड (जैसे 22K916, 18K750) अंकित होना चाहिए।\n- **HUID कोड:** 6 अंकों का विशिष्ट पहचान कोड अनिवार्य है${centreCite}।`;
     } else {
       summary = `यह पूछताछ बीआईएस रिकॉर्ड्स के अनुरूप है। विवरण के लिए संलग्न संदर्भ स्रोतों की समीक्षा करें${sources.length > 0 ? " [1]" : ""}।`;
     }
   } else if (isTamil) {
     if (top) {
-      summary = `${top.title} இந்திய தரநிலைகள் பணியகத்தின் (BIS) அதிகாரப்பூர்வ தரநிலை ${top.number}-இன் கீழ் வருகிறது${topCite}. ${top.scope}`;
+      const items: string[] = [];
+      items.push(`**${top.title}** இந்திய தரநிலைகள் பணியகத்தின் (BIS) அதிகாரப்பூர்வ தரநிலை **${top.number}**-இன் கீழ் வருகிறது${topCite}. ${top.scope}`);
+      const bullets: string[] = [];
       if (top.clauses && top.clauses.length > 0) {
-        summary += ` ${top.clauses[0].title}-இன் படி தொழில்நுட்ப தேவைகள் மற்றும் விவரக்குறிப்புகளுக்கு இணங்குவது கட்டாயமாகும்${topCite}.`;
+        bullets.push(`- **தொழில்நுட்ப விவரக்குறிப்பு (${top.clauses[0].title}):** தேவைகளுக்கு இணங்குவது கட்டாயமாகும்${topCite}.`);
       }
       if (qco) {
-        summary += ` ${qco.name}-இன் கீழ், பிஐஎஸ் தரக் குறியீட்டுடன் (ISI முத்திரை) மட்டுமே இதை உற்பத்தி செய்யவோ, சேமிக்கவோ மற்றும் விற்பனை செய்யவோ முடியும்${qcoCite}.`;
+        bullets.push(`- **சட்ட ஆணை:** **${qco.name}**-இன் கீழ், பிஐஎஸ் தரக் குறியீட்டுடன் (ISI முத்திரை) மட்டுமே உற்பத்தி மற்றும் விற்பனை செய்ய முடியும்${qcoCite}.`);
       } else if (scheme) {
-        summary += ` இதன் சான்றிதழ் ${scheme.name} மூலம் நிர்வகிக்கப்படுகிறது${schemeCite}.`;
+        bullets.push(`- **சான்றிதழ் திட்டம்:** இதன் சான்றிதழ் **${scheme.name}** மூலம் நிர்வகிக்கப்படுகிறது${schemeCite}.`);
       }
       if (top.tests && top.tests.length > 0) {
-        summary += ` முக்கிய கட்டாய சோதனைகளில் ${top.tests.slice(0, 3).join(", ")} ஆகியவை அடங்கும்.`;
+        bullets.push(`- **முக்கிய சோதனைகள்:** ${top.tests.slice(0, 3).join(", ")} ஆகியவை அடங்கும்.`);
       }
+      if (bullets.length) items.push(bullets.join("\n"));
+      summary = items.join("\n\n");
     } else if (centre || /hallmark|gold/i.test(question)) {
-      summary = `இந்தியாவில் தங்கம் மற்றும் வெள்ளி நகைகளுக்கு பிஐஎஸ் ஹால்மார்க்கிங் கட்டாயமாகும்${centreCite}. ஒவ்வொரு நகையிலும் பிஐஎஸ் முத்திரை, தூய்மை தரம் (எ.கா. 22K916), மற்றும் 6 இலக்க HUID குறியீடு இருக்க வேண்டும்${centreCite}.`;
+      summary = `இந்தியாவில் தங்கம் மற்றும் வெள்ளி நகைகளுக்கு பிஐஎஸ் ஹால்மார்க்கிங் கட்டாயமாகும்${centreCite}.\n\n- **பிஐஎஸ் முத்திரை:** ஒவ்வொரு நகையிலும் பிஐஎஸ் லோகோ இருக்க வேண்டும்.\n- **தூய்மை தரம்:** தூய்மை தரம் (எ.கா. 22K916) குறிக்கப்பட வேண்டும்.\n- **HUID குறியீடு:** 6 இலக்க தனித்துவ அடையாள குறியீடு கட்டாயமாகும்${centreCite}.`;
     } else {
       summary = `இந்தக் கோரிக்கை பிஐஎஸ் பதிவுகளுடன் பொருந்துகிறது. விவரங்களுக்கு இணைக்கப்பட்ட குறிப்பு ஆதாரங்களை மதிப்பாய்வு செய்யவும்${sources.length > 0 ? " [1]" : ""}.`;
     }
   } else if (isTelugu) {
     if (top) {
-      summary = `${top.title} బ్యూరో ఆఫ్ ఇండియన్ స్టాండర్డ్స్ (BIS) అధికారిక ప్రమాణం ${top.number} పరిధిలోకి వస్తుంది${topCite}. ${top.scope}`;
+      const items: string[] = [];
+      items.push(`**${top.title}** బ్యూరో ఆఫ్ ఇండియన్ స్టాండర్డ్స్ (BIS) అధికారిక ప్రమాణం **${top.number}** పరిధిలోకి వస్తుంది${topCite}. ${top.scope}`);
+      const bullets: string[] = [];
       if (top.clauses && top.clauses.length > 0) {
-        summary += ` ${top.clauses[0].title} ప్రకారం సాంకేతిక అవసరాలు మరియు నిర్దేశాల పాటించడం తప్పనిసరి${topCite}.`;
+        bullets.push(`- **క్లాజ్ వివరాలు (${top.clauses[0].title}):** సాంకేతిక అవసరాల పాటించడం తప్పనిసరి${topCite}.`);
       }
       if (qco) {
-        summary += ` ${qco.name} ప్రకారం, దీని తయారీ, నిల్వ మరియు విక్రయం కేవలం బిఐఎస్ ప్రామాణిక గుర్తు (ISI మార్క్)తో మాత్రమే చేయవచ్చు${qcoCite}.`;
+        bullets.push(`- **చట్టపరమైన ఉత్తర్వు:** **${qco.name}** ప్రకారం, ISI మార్క్ లేకుండా వాణిజ్య విక్రయం నిషేధం${qcoCite}.`);
       } else if (scheme) {
-        summary += ` దీని ధృవీకరణ ${scheme.name} ద్వారా నిర్వహించబడుతుంది${schemeCite}.`;
+        bullets.push(`- **ధృవీకరణ పథకం:** **${scheme.name}** ద్వారా నిర్వహించబడుతుంది${schemeCite}.`);
       }
       if (top.tests && top.tests.length > 0) {
-        summary += ` ముఖ్యమైన తప్పనిసరి పరీక్షలలో ${top.tests.slice(0, 3).join(", ")} ఉన్నాయి.`;
+        bullets.push(`- **ముఖ్య పరీక్షలు:** ${top.tests.slice(0, 3).join(", ")} ఉన్నాయి.`);
       }
+      if (bullets.length) items.push(bullets.join("\n"));
+      summary = items.join("\n\n");
     } else if (centre || /hallmark|gold/i.test(question)) {
-      summary = `భారతదేశంలో బంగారం మరియు వెండి ఆభరణాలకు బిఐఎస్ హాల్‌మార్కింగ్ తప్పనిసరి${centreCite}. ప్రతి ఆభరణంపై బిఐఎస్ లోగో, స్వచ్ఛత గ్రేడ్ (ఉదా. 22K916), మరియు 6 అంకెల HUID కోడ్ ఉండటం అవసరం${centreCite}.`;
+      summary = `భారతదేశంలో బంగారం మరియు వెండి ఆభరణాలకు బిఐఎస్ హాల్‌మార్కింగ్ తప్పనిసరి${centreCite}.\n\n- **బిఐఎస్ లోగో:** ప్రతి ఆభరణంపై బిఐఎస్ మార్క్ తప్పనిసరి.\n- **స్వచ్ఛత గ్రేడ్:** స్వచ్ఛత గ్రేడ్ (ఉదా. 22K916) ఉండాలి.\n- **HUID కోడ్:** 6 అంకెల విశిష్ట గుర్తింపు సంఖ్య అవసరం${centreCite}.`;
     } else {
       summary = `ఈ విచారణ బిఐఎస్ రికార్డులకు అనుగుణంగా ఉంది. వివరాల కోసం జతచేయబడిన సూచన మూలాలను సమీక్షించండి${sources.length > 0 ? " [1]" : ""}.`;
     }
   } else if (isKannada) {
     if (top) {
-      summary = `${top.title} ಭಾರತೀಯ ಮಾನಕ ಬ್ಯೂರೋ (BIS) ಅಧಿಕೃತ ಮಾನಕ ${top.number} ವ್ಯಾಪ್ತಿಗೆ ಒಳಪಡುತ್ತದೆ${topCite}. ${top.scope}`;
+      const items: string[] = [];
+      items.push(`**${top.title}** ಭಾರತೀಯ ಮಾನಕ ಬ್ಯೂರೋ (BIS) ಅಧಿಕೃತ ಮಾನಕ **${top.number}** ವ್ಯಾಪ್ತಿಗೆ ಒಳಪಡುತ್ತದೆ${topCite}. ${top.scope}`);
+      const bullets: string[] = [];
       if (top.clauses && top.clauses.length > 0) {
-        summary += ` ${top.clauses[0].title} ಪ್ರಕಾರ ತಾಂತ್ರಿಕ ಅಗತ್ಯತೆಗಳು ಮತ್ತು ನಿರ್ದಿಷ್ಟತೆಗಳ ಅನುಸರಣೆ ಕಡ್ಡಾಯವಾಗಿದೆ${topCite}.`;
+        bullets.push(`- **ಷರತ್ತು ಅಗತ್ಯತೆಗಳು (${top.clauses[0].title}):** ನಿರ್ದಿಷ್ಟತೆಗಳ ಅನುಸರಣೆ ಕಡ್ಡಾಯವಾಗಿದೆ${topCite}.`);
       }
       if (qco) {
-        summary += ` ${qco.name} ಅಡಿಯಲ್ಲಿ, ಇದನ್ನು ಕೇವಲ ಬಿಐಎಸ್ ಗುಣಮಟ್ಟದ ಗುರುತು (ISI ಮಾರ್ಕ್) ನೊಂದಿಗೆ ಮಾತ್ರ ಉತ್ಪಾದಿಸಬಹುದು, ಸಂಗ್ರಹಿಸಬಹುದು ಮತ್ತು ಮಾರಾಟ ಮಾಡಬಹುದು${qcoCite}.`;
+        bullets.push(`- **ಕಾನೂನು ಆದೇಶ:** **${qco.name}** ಅಡಿಯಲ್ಲಿ, ISI ಮಾರ್ಕ್‌ನೊಂದಿಗೆ ಮಾತ್ರ ಉತ್ಪಾದನೆ ಮತ್ತು ಮಾರಾಟ ಸಾಧ್ಯ${qcoCite}.`);
       } else if (scheme) {
-        summary += ` ಇದರ ಪ್ರಮಾಣೀಕರಣವನ್ನು ${scheme.name} ಮೂಲಕ ನಿರ್ವಹಿಸಲಾಗುತ್ತದೆ${schemeCite}.`;
+        bullets.push(`- **ಪ್ರಮಾಣೀಕರಣ ಯೋಜನೆ:** **${scheme.name}** ಮೂಲಕ ನಿರ್ವಹಿಸಲಾಗುತ್ತದೆ${schemeCite}.`);
       }
       if (top.tests && top.tests.length > 0) {
-        summary += ` ಪ್ರಮುಖ ಕಡ್ಡಾಯ ಪರೀಕ್ಷೆಗಳಲ್ಲಿ ${top.tests.slice(0, 3).join(", ")} ಸೇರಿವೆ.`;
+        bullets.push(`- **ಪ್ರಮುಖ ಪರೀಕ್ಷೆಗಳು:** ${top.tests.slice(0, 3).join(", ")} ಸೇರಿವೆ.`);
       }
+      if (bullets.length) items.push(bullets.join("\n"));
+      summary = items.join("\n\n");
     } else if (centre || /hallmark|gold/i.test(question)) {
-      summary = `ಭಾರತದಲ್ಲಿ ಚಿನ್ನ ಮತ್ತು ಬೆಳ್ಳಿ ಆಭರಣಗಳಿಗೆ ಬಿಐಎಸ್ ಹಾಲ್‌ಮಾರ್ಕಿಂಗ್ ಕಡ್ಡಾಯವಾಗಿದೆ${centreCite}. ಪ್ರತಿಯೊಂದು ಆಭರಣದ ಮೇಲೆ ಬಿಐಎಸ್ ಲೋಗೋ, ಶುದ್ಧತೆಯ ಶ್ರೇಣಿ (ಉದಾ. 22K916), ಮತ್ತು 6 ಅಂಕಿಗಳ HUID ಕೋಡ್ ಇರುವುದು ಕಡ್ಡಾಯವಾಗಿದೆ${centreCite}.`;
+      summary = `ಭಾರತದಲ್ಲಿ ಚಿನ್ನ ಮತ್ತು ಬೆಳ್ಳಿ ಆಭರಣಗಳಿಗೆ ಬಿಐಎಸ್ ಹಾಲ್‌ಮಾರ್ಕಿಂಗ್ ಕಡ್ಡಾಯವಾಗಿದೆ${centreCite}.\n\n- **ಬಿಐಎಸ್ ಲೋಗೋ:** ಪ್ರತಿಯೊಂದು ಆಭರಣದ ಮೇಲೆ ಬಿಐಎಸ್ ಮುದ್ರೆ ಇರಬೇಕು.\n- **ಶುದ್ಧತೆಯ ಶ್ರೇಣಿ:** ಶುದ್ಧತೆಯ ಶ್ರೇಣಿ (ಉದಾ. 22K916) ಇರಬೇಕು.\n- **HUID ಕೋಡ್:** 6 ಅಂಕಿಗಳ ವಿಶಿಷ್ಟ ಗುರುತಿನ ಸಂಖ್ಯೆ ಕಡ್ಡಾಯವಾಗಿದೆ${centreCite}.`;
     } else {
       summary = `ಈ ವಿಚಾರಣೆಯು ಬಿಐಎಸ್ ದಾಖಲೆಗಳಿಗೆ ಅನುಗುಣವಾಗಿದೆ. ವಿವರಗಳಿಗಾಗಿ ಲಗತ್ತಿಸಲಾದ ಮೂಲಗಳನ್ನು ಪರಿಶೀಲಿಸಿ${sources.length > 0 ? " [1]" : ""}.`;
     }
   } else {
     // English Synthesis
     if (top) {
-      summary = `${top.title} is governed under Indian Standard ${top.number}${topCite}. ${top.scope.endsWith(".") ? top.scope : top.scope + "."}`;
+      const items: string[] = [];
+      items.push(`**${top.title}** is governed under Indian Standard **${top.number}**${topCite}. ${top.scope.endsWith(".") ? top.scope : top.scope + "."}`);
+
+      const bullets: string[] = [];
       if (top.clauses && top.clauses.length > 0) {
         const cl = top.clauses[0];
         const clText = cl.text.length > 200 ? `${cl.text.slice(0, 200).trimEnd()}…` : cl.text;
-        summary += ` Under ${cl.title}, ${clText}${topCite}`;
+        bullets.push(`- **Clause specification (${cl.title}):** ${clText}${topCite}`);
       }
       if (qco) {
-        summary += ` Compliance is legally mandatory under the ${qco.name} (${qco.notification})${qcoCite}, which prohibits manufacturing, importing, or selling without the BIS Standard Mark.`;
+        bullets.push(`- **Legal mandate:** Mandatory certification under the **${qco.name}** (${qco.notification})${qcoCite}. Manufacturing, importing, or selling without the BIS Standard Mark (ISI mark) is prohibited by law.`);
       } else if (scheme) {
-        summary += ` Certification is administered under ${scheme.name}${schemeCite}, requiring factory quality inspection and conformant sample testing.`;
+        bullets.push(`- **Certification scheme:** Administered under **${scheme.name}**${schemeCite}, requiring factory quality inspection and conformant sample testing.`);
       } else {
-        summary += ` Applicability must be verified against applicable departmental Quality Control Orders (QCOs) to determine mandatory vs. voluntary ISI marking.`;
+        bullets.push(`- **Compliance verification:** Applicability must be verified against applicable departmental Quality Control Orders (QCOs) to determine mandatory vs. voluntary ISI marking.`);
       }
       if (top.tests && top.tests.length > 0) {
-        summary += ` Key mandatory tests include ${top.tests.slice(0, 4).join(", ")}.`;
+        bullets.push(`- **Core testing requirements:** Key mandatory tests include ${top.tests.slice(0, 4).join(", ")}.`);
       }
       if (lab) {
-        summary += ` Recognized testing is supported by facilities such as ${lab.name} in ${lab.city} (${lab.accreditation})${labCite}.`;
+        bullets.push(`- **Recognized testing:** Supported by accredited facilities such as **${lab.name}** in ${lab.city} (${lab.accreditation})${labCite}.`);
       }
+
+      if (bullets.length > 0) {
+        items.push(bullets.join("\n"));
+      }
+
+      summary = items.join("\n\n");
     } else if (centre || /hallmark|gold|jewel/i.test(question)) {
-      summary = `Gold and silver jewellery in India requires mandatory hallmarking under BIS regulations${centreCite}. Every article must bear the BIS mark, purity grade (such as 22K916, 18K750), and a 6-digit alphanumeric Hallmark Unique Identification (HUID) number${centreCite}. Assaying is conducted through BIS-recognised centres like ${centre ? centre.name : "authorized centres"}${centreCite}.`;
+      summary = `Gold and silver jewellery in India requires mandatory hallmarking under BIS regulations${centreCite}.\n\n- **BIS Standard Mark:** Every article must bear the official triangular BIS hallmark logo.\n- **Purity grade:** Clearly marked with karatage and fineness (such as 22K916 or 18K750).\n- **HUID:** 6-digit alphanumeric Hallmark Unique Identification number${centreCite}.\n- **Testing & Assaying:** Conducted through BIS-recognised assaying and hallmarking centres${centreCite}.`;
     } else if (qco) {
-      summary = `The ${qco.name} (${qco.notification})${qcoCite} mandates BIS certification for covered items. ${qco.summary}`;
+      summary = `The **${qco.name}** (${qco.notification})${qcoCite} mandates BIS certification for covered items.\n\n${qco.summary}`;
     } else if (scheme) {
-      summary = `Under ${scheme.name}${schemeCite}, ${scheme.summary} Applies to: ${scheme.applicability}.`;
+      summary = `Under **${scheme.name}**${schemeCite}:\n\n- **Overview:** ${scheme.summary}\n- **Scope:** Applies to ${scheme.applicability}.`;
     } else {
       summary = `Retrieved verified BIS official documentation covering this requirement [1]. Check the sources panel for exact clause and regulatory details.`;
     }
   }
 
   // 3. Structured Product
+  const cleanAttributes = top?.keywords
+    ? top.keywords.filter((k) => k.length <= 22 && !k.includes(",") && !k.includes("—")).slice(0, 3)
+    : [];
+
   const product = top
     ? {
         name: top.title.replace(/\s*—.*$/, "").trim(),
         category: top.sector,
-        attributes: [top.sector, ...top.keywords.slice(0, 3)],
+        attributes: [top.sector, ...cleanAttributes],
       }
     : undefined;
 

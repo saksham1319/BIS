@@ -1,18 +1,18 @@
 "use client";
 
 import {
-    ArrowsDownUp,
-    Books,
-    Buildings,
-    EnvelopeSimple,
-    Flask,
-    MagnifyingGlass,
+    ArrowUpDown,
+    BookOpen,
+    Building2,
+    CheckCircle2,
+    FlaskConical,
+    Mail,
     MapPin,
     Phone,
-    SealCheck,
+    Search,
     Timer,
     X,
-} from "@phosphor-icons/react";
+} from "lucide-react";
 import {useCallback, useMemo, useState} from "react";
 import {labStates, labs as allLabs} from "@/lib/bis/data";
 import type {Laboratory} from "@/lib/bis/types";
@@ -160,7 +160,7 @@ export function LabsFinder({initialQuery = ""}: LabsFinderProps) {
             <section className="lab-search-panel">
                 <label htmlFor="lab-search">Which laboratory capability do you need?</label>
                 <div className="lab-search-row">
-                    <MagnifyingGlass size={21}/>
+                    <Search size={21}/>
                     <input
                         id="lab-search"
                         type="search"
@@ -191,7 +191,7 @@ export function LabsFinder({initialQuery = ""}: LabsFinderProps) {
                     </label>
 
                     <label className="lab-filter-field">
-                        <Flask size={15}/>
+                        <FlaskConical size={15}/>
                         <span className="sr-only">Filter by test group</span>
                         <select value={testGroup} onChange={(event) => setTestGroup(event.target.value)}>
                             <option value="all">All test groups</option>
@@ -200,7 +200,7 @@ export function LabsFinder({initialQuery = ""}: LabsFinderProps) {
                     </label>
 
                     <label className="lab-filter-field">
-                        <ArrowsDownUp size={15}/>
+                        <ArrowUpDown size={15}/>
                         <span className="sr-only">Sort laboratories</span>
                         <select value={sort} onChange={(event) => setSort(event.target.value as SortKey)}>
                             {sortOptions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
@@ -220,7 +220,7 @@ export function LabsFinder({initialQuery = ""}: LabsFinderProps) {
 
                     {results.length === 0 ? (
                         <div className="empty-state">
-                            <Buildings size={28}/>
+                            <Building2 size={28}/>
                             <h2>{filtersActive ? "No laboratories match these filters" : "No laboratories loaded"}</h2>
                             <p>
                                 {filtersActive
@@ -239,7 +239,7 @@ export function LabsFinder({initialQuery = ""}: LabsFinderProps) {
                         return (
                             <article className="lab-result" key={lab.id}>
                                 <div className="lab-heading">
-                                    <span className="lab-logo"><Buildings size={22}/></span>
+                                    <span className="lab-logo"><Building2 size={22}/></span>
                                     <div>
                                         <h2>{lab.name}</h2>
                                         <p><MapPin size={15}/> {lab.city} <span>{lab.state}</span></p>
@@ -261,7 +261,7 @@ export function LabsFinder({initialQuery = ""}: LabsFinderProps) {
                                         <span>Test groups</span>
                                         <div className="chip-row">
                                             {lab.testGroups.map((group) => (
-                                                <span className="chip" key={group}><Flask size={11}/> {group}</span>
+                                                <span className="chip" key={group}><FlaskConical size={11}/> {group}</span>
                                             ))}
                                         </div>
                                     </div>
@@ -269,14 +269,14 @@ export function LabsFinder({initialQuery = ""}: LabsFinderProps) {
                                         <span>Recognised for</span>
                                         <div className="chip-row">
                                             {lab.recognisedFor.map((number) => (
-                                                <span className="chip navy" key={number}><Books size={11}/> {number}</span>
+                                                <span className="chip navy" key={number}><BookOpen size={11}/> {number}</span>
                                             ))}
                                         </div>
                                     </div>
                                 </div>
 
                                 <div className="verification-line">
-                                    <SealCheck size={16} weight="fill"/> {lab.accreditation}
+                                    <CheckCircle2 size={16}/> {lab.accreditation}
                                     <span className="lab-turnaround">
                                         <Timer size={14}/> {lab.turnaroundDays} day turnaround
                                     </span>
@@ -287,7 +287,7 @@ export function LabsFinder({initialQuery = ""}: LabsFinderProps) {
                                         <Phone size={14}/> {lab.contact}
                                     </a>
                                     <a className="contact-link" href={`mailto:${lab.email}`}>
-                                        <EnvelopeSimple size={14}/> {lab.email}
+                                        <Mail size={14}/> {lab.email}
                                     </a>
                                 </div>
                             </article>

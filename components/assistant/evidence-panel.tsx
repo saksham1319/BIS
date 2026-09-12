@@ -2,21 +2,21 @@
 
 import {useEffect, useRef, useState} from "react";
 import {
-    ArrowSquareOut,
-    Books,
-    CaretRight,
-    Certificate,
-    ClipboardText,
-    Copy,
+    Award,
+    BookOpen,
+    Bookmark,
     Check,
-    DiamondsFour,
-    FilePdf,
+    ChevronRight,
+    ClipboardList,
+    Copy,
+    ExternalLink,
+    FileText,
     Files,
-    Flask,
-    IdentificationBadge,
-    SealCheck,
+    FlaskConical,
+    Gem,
+    ShieldCheck,
     X,
-} from "@phosphor-icons/react";
+} from "lucide-react";
 import type {EvidenceSource, SourceType} from "@/lib/bis/types";
 
 export interface EvidencePanelProps {
@@ -33,18 +33,18 @@ export interface EvidencePanelProps {
 function SourceIcon({type}: {type: SourceType}) {
     switch (type) {
         case "Quality Control Order":
-            return <ClipboardText size={23} weight="duotone"/>;
+            return <ClipboardList size={22} />;
         case "Product Manual":
-            return <Books size={23} weight="duotone"/>;
+            return <BookOpen size={22} />;
         case "Certification Scheme":
-            return <Certificate size={23} weight="duotone"/>;
+            return <Award size={22} />;
         case "Laboratory Record":
-            return <Flask size={23} weight="duotone"/>;
+            return <FlaskConical size={22} />;
         case "Hallmarking Guidance":
-            return <DiamondsFour size={23} weight="duotone"/>;
+            return <Gem size={22} />;
         case "Indian Standard":
         default:
-            return <FilePdf size={23} weight="duotone"/>;
+            return <FileText size={22} />;
     }
 }
 
@@ -141,7 +141,7 @@ export function EvidencePanel({sources, selected, onSelect, onClose, onOpenDocum
                 <p className="source-title">{active.title}</p>
 
                 <div className="source-location">
-                    <IdentificationBadge size={17}/>
+                    <Bookmark size={16}/>
                     <div>
                         <span>Relevant location</span>
                         <strong>{active.location}{typeof active.page === "number" ? ` · p.${active.page}` : ""}</strong>
@@ -155,11 +155,11 @@ export function EvidencePanel({sources, selected, onSelect, onClose, onOpenDocum
 
                 {onOpenDocument ? (
                     <button type="button" className="button primary full" onClick={() => onOpenDocument(active)}>
-                        View highlighted passage <ArrowSquareOut size={17}/>
+                        View highlighted passage <ExternalLink size={16}/>
                     </button>
                 ) : null}
                 <button type="button" className="button secondary full" onClick={copyCitation} aria-live="polite">
-                    {copied ? <Check size={17} weight="bold"/> : <Copy size={17}/>}
+                    {copied ? <Check size={16} /> : <Copy size={16}/>}
                     {copied ? "Citation copied" : "Copy citation"}
                 </button>
             </div>
@@ -175,13 +175,13 @@ export function EvidencePanel({sources, selected, onSelect, onClose, onOpenDocum
                     >
                         <span className="source-index">{index + 1}</span>
                         <span><strong>{source.number}</strong><small>{source.location}</small></span>
-                        <CaretRight size={15}/>
+                        <ChevronRight size={14}/>
                     </button>
                 ))}
             </div>
 
             <div className="source-provenance">
-                <SealCheck size={17} weight="fill"/>
+                <ShieldCheck size={17} />
                 <p>
                     <strong>Source provenance</strong>
                     <span>Every claim above links to an excerpt from the demonstration corpus. Verify against official BIS gazette notifications.</span>

@@ -1,13 +1,13 @@
 "use client";
 
 import {
-    CalendarBlank,
-    Certificate,
+    Award,
+    Calendar,
     Check,
-    CurrencyInr,
-    ListChecks,
-    Storefront,
-} from "@phosphor-icons/react";
+    ClipboardCheck,
+    IndianRupee,
+    Store,
+} from "lucide-react";
 import {KeyboardEvent, useMemo, useRef, useState} from "react";
 import {schemes} from "@/lib/bis/data";
 import type {CertificationScheme} from "@/lib/bis/types";
@@ -56,7 +56,7 @@ export function CertificationGuide({initialSchemeId}: CertificationGuideProps) {
                     </div>
                 </div>
                 <div className="empty-state">
-                    <Certificate size={28}/>
+                    <Award size={28}/>
                     <h2>No certification schemes loaded</h2>
                     <p>The demonstration corpus does not contain any certification schemes.</p>
                 </div>
@@ -137,13 +137,13 @@ export function CertificationGuide({initialSchemeId}: CertificationGuideProps) {
                     <div>
                         <span>Applies to</span>
                         <strong>
-                            <Storefront size={15}/> Applicability
+                            <Store size={15}/> Applicability
                         </strong>
                         <p>{scheme.applicability}</p>
                     </div>
                     <div>
                         <span>Indicative timeline</span>
-                        <strong><CalendarBlank size={15}/> {scheme.timeline}</strong>
+                        <strong><Calendar size={15}/> {scheme.timeline}</strong>
                         <p>End-to-end estimate once a complete application is submitted.</p>
                     </div>
                     <div>
@@ -160,7 +160,7 @@ export function CertificationGuide({initialSchemeId}: CertificationGuideProps) {
                                 <h2>Process steps</h2>
                                 <p>Each step must be completed before the next one can be assessed.</p>
                             </div>
-                            <span className="status neutral"><ListChecks size={13}/> {scheme.steps.length} steps</span>
+                            <span className="status neutral"><ClipboardCheck size={13}/> {scheme.steps.length} steps</span>
                         </div>
                         <ol className="cert-timeline">
                             {scheme.steps.map((step, index) => (
@@ -202,7 +202,7 @@ export function CertificationGuide({initialSchemeId}: CertificationGuideProps) {
                             This checklist is local to your browser session and resets when you change scheme.
                         </p>
                         {readyCount === totalDocuments && totalDocuments > 0 && (
-                            <span className="status complete"><Check size={13} weight="bold"/> All documents ready</span>
+                            <span className="status complete"><Check size={13}/> All documents ready</span>
                         )}
                     </aside>
                 </div>
@@ -221,7 +221,7 @@ export function CertificationGuide({initialSchemeId}: CertificationGuideProps) {
                             {scheme.fees.map((fee) => (
                                 <tr key={fee.label}>
                                     <th scope="row">{fee.label}</th>
-                                    <td className="fee-amount"><CurrencyInr size={12}/> {fee.amount}</td>
+                                    <td className="fee-amount"><IndianRupee size={12}/> {fee.amount}</td>
                                 </tr>
                             ))}
                             </tbody>

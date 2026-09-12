@@ -2,7 +2,7 @@
 
 import {useCallback, useEffect, useRef, useState} from "react";
 import type {FormEvent, KeyboardEvent} from "react";
-import {ArrowUp, CaretDown, Microphone, SealCheck, WarningCircle, X} from "@phosphor-icons/react";
+import {ArrowUp, ChevronDown, Mic, ShieldCheck, AlertCircle, X} from "lucide-react";
 import {useLocale} from "next-intl";
 import type {Locale} from "@/i18n/locales";
 import type {ChatMessage} from "@/lib/bis/types";
@@ -39,17 +39,6 @@ export interface ChatThreadProps {
 function prefersReducedMotion(): boolean {
     if (typeof window === "undefined" || typeof window.matchMedia !== "function") return false;
     return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-}
-
-/** Nearest ancestor that actually scrolls. The app shell owns the scroll container, not this component. */
-function findScrollParent(node: HTMLElement | null): HTMLElement | null {
-    let current = node?.parentElement ?? null;
-    while (current) {
-        const overflowY = window.getComputedStyle(current).overflowY;
-        if (overflowY === "auto" || overflowY === "scroll" || overflowY === "overlay") return current;
-        current = current.parentElement;
-    }
-    return null;
 }
 
 export function ChatThread({
@@ -90,8 +79,7 @@ export function ChatThread({
         },
     });
 
-    const rootRef = useRef<HTMLDivElement | null>(null);
-    const scrollerRef = useRef<HTMLElement | null>(null);
+    const scrollRef = useRef<HTMLDivElement | null>(null);
     const textareaRef = useRef<HTMLTextAreaElement | null>(null);
     const lastStatusRef = useRef<string | null>(null);
     const wasLoadingRef = useRef(false);
@@ -113,28 +101,28 @@ export function ChatThread({
     /* ---------------------------------------------------------------- scrolling */
 
     const scrollToBottom = useCallback((smooth: boolean) => {
-        const target: Element | null = scrollerRef.current ?? document.scrollingElement ?? document.documentElement;
+        const target = scrollRef.current;
         if (!target) return;
-        target.scrollTo({top: target.scrollHeight, behavior: smooth && !prefersReducedMotion() ? "smooth" : "auto"});
+        target.scrollTo({
+            top: target.scrollHeight,
+            behavior: smooth && !prefersReducedMotion() ? "smooth" : "auto",
+        });
     }, []);
 
     useEffect(() => {
-        const scroller = findScrollParent(rootRef.current);
-        scrollerRef.current = scroller;
-        const listener: EventTarget = scroller ?? window;
+        const scroller = scrollRef.current;
+        if (!scroller) return;
 
         const read = () => {
-            const target: Element | null = scrollerRef.current ?? document.scrollingElement ?? document.documentElement;
-            if (!target) return;
-            const distance = target.scrollHeight - target.scrollTop - target.clientHeight;
+            const distance = scroller.scrollHeight - scroller.scrollTop - scroller.clientHeight;
             setAtBottom(distance <= BOTTOM_THRESHOLD);
         };
 
         read();
-        listener.addEventListener("scroll", read, {passive: true});
+        scroller.addEventListener("scroll", read, {passive: true});
         window.addEventListener("resize", read);
         return () => {
-            listener.removeEventListener("scroll", read);
+            scroller.removeEventListener("scroll", read);
             window.removeEventListener("resize", read);
         };
     }, []);
@@ -142,8 +130,13 @@ export function ChatThread({
     useEffect(() => {
         const grew = messages.length > messageCountRef.current;
         messageCountRef.current = messages.length;
+        if (grew) {
+            setAtBottom(true);
+            scrollToBottom(true);
+            return;
+        }
         if (!atBottom) return;
-        scrollToBottom(grew);
+        scrollToBottom(false);
     }, [messages.length, streamingText, status, isLoading, atBottom, scrollToBottom]);
 
     /* -------------------------------------------------------- retrieval progress */
@@ -201,10 +194,12 @@ export function ChatThread({
             if (isListening) {
                 stopListening();
             }
+            setAtBottom(true);
             onAsk(trimmed);
             setDraft("");
+            requestAnimationFrame(() => scrollToBottom(true));
         },
-        [isLoading, isListening, onAsk, stopListening],
+        [isLoading, isListening, onAsk, stopListening, scrollToBottom],
     );
 
     function handleSubmit(event: FormEvent) {
@@ -223,6 +218,7 @@ export function ChatThread({
     const handleClarify = useCallback(
         (response: string) => {
             if (response && response.trim().length > 0) {
+                setAtBottom(true);
                 void submitQuestion(response);
             } else {
                 setFocusToken((token) => token + 1);
@@ -236,174 +232,178 @@ export function ChatThread({
     /* -------------------------------------------------------------------- render */
 
     return (
-        <div className="conversation-scroll" ref={rootRef}>
-            <div className="conversation">
-                <div className="conversation-heading">
-                    <div>
-                        <h1>Compliance assistant</h1>
-                        <p>Ask a product or BIS service question. Important claims include inspectable sources.</p>
+        <div className="chat-layout">
+            <div className="conversation-scroll" ref={scrollRef}>
+                <div className="conversation">
+                    <div className="conversation-heading">
+                        <div>
+                            <h1>Compliance assistant</h1>
+                            <p>Ask a product or BIS service question. Important claims include inspectable sources.</p>
+                        </div>
+                        <span className="context-chip"><ShieldCheck size={14} /> Source-backed answers</span>
                     </div>
-                    <span className="context-chip"><SealCheck size={15} weight="fill"/> Source-backed answers</span>
-                </div>
 
-                {isEmpty ? (
-                    <section className="assistant-welcome" aria-label="Example questions">
-                        <strong>Start with one of these</strong>
-                        <p>Each answer names the Indian Standard, the certification route, and the clause it came from.</p>
-                        <div className="example-questions">
-                            {EXAMPLE_QUESTIONS.map((question) => (
-                                <button type="button" key={question} onClick={() => onAsk(question)}>
-                                    <span>{question}</span>
-                                    <CaretDown className="example-arrow" size={14} weight="bold"/>
-                                </button>
-                            ))}
-                        </div>
-                    </section>
-                ) : null}
+                    {isEmpty ? (
+                        <section className="assistant-welcome" aria-label="Example questions">
+                            <strong>Start with one of these</strong>
+                            <p>Each answer names the Indian Standard, the certification route, and the clause it came from.</p>
+                            <div className="example-questions">
+                                {EXAMPLE_QUESTIONS.map((question) => (
+                                    <button type="button" key={question} onClick={() => onAsk(question)}>
+                                        <span>{question}</span>
+                                        <ChevronDown className="example-arrow" size={15} />
+                                    </button>
+                                ))}
+                            </div>
+                        </section>
+                    ) : null}
 
-                {messages.map((message, index) =>
-                    message.role === "user" ? (
-                        <div className="user-message" key={`u${index}`}>
-                            <span className="message-author">You</span>
-                            <p>{message.content}</p>
-                        </div>
-                    ) : (
+                    {messages.map((message, index) =>
+                        message.role === "user" ? (
+                            <div className="user-message" key={`u${index}`}>
+                                <span className="message-author">You</span>
+                                <p>{message.content}</p>
+                            </div>
+                        ) : (
+                            <AnswerCard
+                                key={`a${index}`}
+                                answer={message.answer ?? null}
+                                streamingText={message.answer ? "" : message.content}
+                                streaming={false}
+                                onCitation={onCitation}
+                                onOpenView={onOpenView}
+                                onClarify={handleClarify}
+                            />
+                        ),
+                    )}
+
+                    {isLoading && !streamingText ? <RetrievalState status={status} completed={completed}/> : null}
+
+                    {isLoading && streamingText ? (
                         <AnswerCard
-                            key={`a${index}`}
-                            answer={message.answer ?? null}
-                            streamingText={message.answer ? "" : message.content}
-                            streaming={false}
+                            answer={null}
+                            streamingText={streamingText}
+                            streaming
                             onCitation={onCitation}
                             onOpenView={onOpenView}
                             onClarify={handleClarify}
                         />
-                    ),
-                )}
+                    ) : null}
+                </div>
 
-                {isLoading && !streamingText ? <RetrievalState status={status} completed={completed}/> : null}
-
-                {isLoading && streamingText ? (
-                    <AnswerCard
-                        answer={null}
-                        streamingText={streamingText}
-                        streaming
-                        onCitation={onCitation}
-                        onOpenView={onOpenView}
-                        onClarify={handleClarify}
-                    />
+                {!atBottom && messages.length > 0 ? (
+                    <button type="button" className="jump-latest" onClick={() => scrollToBottom(true)}>
+                        <ChevronDown size={14} /> Jump to latest
+                    </button>
                 ) : null}
             </div>
 
-            <div className="sticky-composer-wrap">
-                {!atBottom && messages.length > 0 ? (
-                    <button type="button" className="jump-latest" onClick={() => scrollToBottom(true)}>
-                        <CaretDown size={13} weight="bold"/> Jump to latest
-                    </button>
-                ) : null}
-
-                {displayedError ? (
-                    <div className="assistant-error" role="alert">
-                        <WarningCircle size={18} weight="fill"/>
-                        <p>{displayedError}</p>
-                        <button
-                            type="button"
-                            className="icon-button"
-                            aria-label="Dismiss error"
-                            title="Dismiss error"
-                            onClick={() => {
-                                if (visibleError && error) setDismissedError(error);
-                                if (activeSpeechError && speechError) {
-                                    setSpeechErrorDismissed(speechError);
-                                    clearSpeechError();
-                                }
-                            }}
-                        >
-                            <X size={15}/>
-                        </button>
-                    </div>
-                ) : null}
-
-                <form className="app-composer" onSubmit={handleSubmit}>
-                    <label htmlFor="assistant-composer" className="sr-only">Ask a BIS compliance question</label>
-                    <textarea
-                        id="assistant-composer"
-                        ref={textareaRef}
-                        value={draft}
-                        onChange={(event) => setDraft(event.target.value)}
-                        onKeyDown={handleKeyDown}
-                        placeholder={messages.length ? "Ask a follow-up or describe another product..." : "Describe your product or ask a BIS question..."}
-                        rows={2}
-                        disabled={isLoading}
-                        aria-busy={isLoading}
-                    />
-                    <div className="composer-footer">
-                        <div className="composer-tools">
-                            <span className="language-badge">{locale.toUpperCase()}</span>
-                            {isListening ? (
-                                <span className="composer-listening-status" aria-live="polite">
-                                    <span className="mic-listening-dot" aria-hidden="true"/>
-                                    Listening…
-                                </span>
-                            ) : (
-                                <span className="composer-hint">Enter to send · Shift + Enter for a new line</span>
-                            )}
-                        </div>
-                        <div className="composer-actions">
+            <div className="composer-dock">
+                <div className="composer-dock-inner">
+                    {displayedError ? (
+                        <div className="assistant-error" role="alert">
+                            <AlertCircle size={17} />
+                            <p>{displayedError}</p>
                             <button
                                 type="button"
-                                className={`mic-button ${isListening ? "is-listening" : ""}`}
+                                className="icon-button"
+                                aria-label="Dismiss error"
+                                title="Dismiss error"
                                 onClick={() => {
-                                    setSpeechErrorDismissed(null);
-                                    clearSpeechError();
-                                    toggleListening(draft);
+                                    if (visibleError && error) setDismissedError(error);
+                                    if (activeSpeechError && speechError) {
+                                        setSpeechErrorDismissed(speechError);
+                                        clearSpeechError();
+                                    }
                                 }}
-                                disabled={isLoading || !isSupported}
-                                aria-label={
-                                    !isSupported
-                                        ? "Voice input isn't supported in this browser"
-                                        : isListening
-                                          ? "Stop listening"
-                                          : "Start voice input"
-                                }
-                                aria-pressed={isListening}
-                                title={
-                                    !isSupported
-                                        ? "Voice input isn't supported in this browser."
-                                        : isListening
-                                          ? "Listening… Click to stop"
-                                          : "Voice input (speak to type)"
-                                }
                             >
-                                <Microphone size={18} weight={isListening ? "fill" : "bold"} aria-hidden="true"/>
-                                {isListening ? <span className="mic-label">Listening…</span> : null}
+                                <X size={15}/>
                             </button>
-                            {isLoading ? (
+                        </div>
+                    ) : null}
+
+                    <form className="app-composer" onSubmit={handleSubmit}>
+                        <label htmlFor="assistant-composer" className="sr-only">Ask a BIS compliance question</label>
+                        <textarea
+                            id="assistant-composer"
+                            ref={textareaRef}
+                            value={draft}
+                            onChange={(event) => setDraft(event.target.value)}
+                            onKeyDown={handleKeyDown}
+                            placeholder={messages.length ? "Ask a follow-up or describe another product..." : "Describe your product or ask a BIS question..."}
+                            rows={2}
+                            disabled={isLoading}
+                            aria-busy={isLoading}
+                        />
+                        <div className="composer-footer">
+                            <div className="composer-tools">
+                                <span className="language-badge">{locale.toUpperCase()}</span>
+                                {isListening ? (
+                                    <span className="composer-listening-status" aria-live="polite">
+                                        <span className="mic-listening-dot" aria-hidden="true"/>
+                                        Listening…
+                                    </span>
+                                ) : (
+                                    <span className="composer-hint">Enter to send · Shift + Enter for a new line</span>
+                                )}
+                            </div>
+                            <div className="composer-actions">
                                 <button
                                     type="button"
-                                    className="send-button is-stop"
-                                    onClick={onStop}
-                                    aria-label="Stop generating"
-                                    title="Stop generating"
+                                    className={`mic-button ${isListening ? "is-listening" : ""}`}
+                                    onClick={() => {
+                                        setSpeechErrorDismissed(null);
+                                        clearSpeechError();
+                                        toggleListening(draft);
+                                    }}
+                                    disabled={isLoading || !isSupported}
+                                    aria-label={
+                                        !isSupported
+                                            ? "Voice input isn't supported in this browser"
+                                            : isListening
+                                              ? "Stop listening"
+                                              : "Start voice input"
+                                    }
+                                    aria-pressed={isListening}
+                                    title={
+                                        !isSupported
+                                            ? "Voice input isn't supported in this browser."
+                                            : isListening
+                                              ? "Listening… Click to stop"
+                                              : "Voice input (speak to type)"
+                                    }
                                 >
-                                    <X size={17} weight="bold"/>
+                                    <Mic size={17} aria-hidden="true"/>
+                                    {isListening ? <span className="mic-label">Listening…</span> : null}
                                 </button>
-                            ) : (
-                                <button
-                                    type="submit"
-                                    className="send-button"
-                                    aria-label="Send question"
-                                    disabled={!draft.trim() || isListening}
-                                >
-                                    <ArrowUp size={19} weight="bold"/>
-                                </button>
-                            )}
+                                {isLoading ? (
+                                    <button
+                                        type="button"
+                                        className="send-button is-stop"
+                                        onClick={onStop}
+                                        aria-label="Stop generating"
+                                        title="Stop generating"
+                                    >
+                                        <X size={16} />
+                                    </button>
+                                ) : (
+                                    <button
+                                        type="submit"
+                                        className="send-button"
+                                        aria-label="Send question"
+                                        disabled={!draft.trim() || isListening}
+                                    >
+                                        <ArrowUp size={18} />
+                                    </button>
+                                )}
+                            </div>
                         </div>
-                    </div>
-                </form>
+                    </form>
 
-                <p className="ai-note" aria-live="polite">
-                    {isLoading && status ? status : "Verify final compliance decisions with the cited official documents."}
-                </p>
+                    <p className="ai-note" aria-live="polite">
+                        {isLoading && status ? status : "Verify final compliance decisions with the cited official documents."}
+                    </p>
+                </div>
             </div>
         </div>
     );

@@ -1,6 +1,6 @@
 "use client";
 
-import {CheckCircle, MagnifyingGlass} from "@phosphor-icons/react";
+import {CheckCircle2, Search} from "lucide-react";
 
 export interface RetrievalStateProps {
     /** The step currently in progress, streamed from the server. */
@@ -20,17 +20,17 @@ export function RetrievalState({status, completed}: RetrievalStateProps) {
 
     return (
         <div className="retrieval-state" role="status" aria-live="polite">
-            <div className="retrieval-mark"><MagnifyingGlass size={21}/></div>
+            <div className="retrieval-mark"><Search size={20}/></div>
             <div>
                 <strong>Building a source-backed answer</strong>
                 <div className="retrieval-steps">
                     {done.map((step, index) => (
                         <span key={`${step}-${index}`} className="is-done" style={{animationDelay: `${index * 60}ms`}}>
-                            <CheckCircle size={15} weight="fill"/> {step}
+                            <CheckCircle2 size={14} /> {step}
                         </span>
                     ))}
                     <span key={active} className="is-active" style={{animationDelay: `${done.length * 60}ms`}}>
-                        <CheckCircle size={15}/> <em>{active}</em>
+                        <CheckCircle2 size={14}/> <em>{active}</em>
                     </span>
                 </div>
             </div>

@@ -2,12 +2,12 @@
 
 import {
     Check,
-    ClipboardText,
-    DownloadSimple,
-    FilePdf,
+    ClipboardList,
+    Download,
+    FileText,
     Files,
-    NotePencil,
-} from "@phosphor-icons/react";
+    Pencil,
+} from "lucide-react";
 import {useCallback, useMemo, useState} from "react";
 import {
     getLabsForStandard,
@@ -275,8 +275,8 @@ export function ReportsView({initialStandardId}: ReportsViewProps = {}) {
 
             <div className="report-feature">
                 <div className="report-preview">
-                    <FilePdf size={38} weight="duotone"/>
-                    <span>BIS Sathi</span>
+                    <FileText size={38}/>
+                    <span>BIS Saathi</span>
                     <strong>Compliance summary</strong>
                     <p>{selected ? selected.number : "No standard selected"}</p>
                     <div className="report-lines"><i/><i/><i/></div>
@@ -285,7 +285,7 @@ export function ReportsView({initialStandardId}: ReportsViewProps = {}) {
                 <div className="report-copy">
                     <h2>Generate a review-ready compliance brief</h2>
                     <p>
-                        Pick a standard and BIS Sathi assembles its scope, the applicable Quality Control Order, the
+                        Pick a standard and BIS Saathi assembles its scope, the applicable Quality Control Order, the
                         certification scheme, the required tests, the indexed clauses and matching laboratories into one
                         Markdown document you can share with your team.
                     </p>
@@ -321,13 +321,13 @@ export function ReportsView({initialStandardId}: ReportsViewProps = {}) {
                             onClick={generate}
                             disabled={!selected}
                         >
-                            <DownloadSimple size={17}/> Generate report
+                            <Download size={17}/> Generate report
                         </button>
                     </div>
 
                     {notice && (
                         <p className="report-status" role="status">
-                            <Check size={14} weight="bold"/> {notice}
+                            <Check size={14}/> {notice}
                         </p>
                     )}
                 </div>
@@ -358,8 +358,8 @@ export function ReportsView({initialStandardId}: ReportsViewProps = {}) {
                             >
                                 <span className="saved-icon">
                                     {report.status === "ready"
-                                        ? <ClipboardText size={19} weight="fill"/>
-                                        : <NotePencil size={19}/>}
+                                        ? <ClipboardList size={19}/>
+                                        : <Pencil size={19}/>}
                                 </span>
                                 <span className="saved-copy">
                                     <strong>{report.product}</strong>

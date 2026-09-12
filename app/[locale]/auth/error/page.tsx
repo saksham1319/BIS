@@ -1,4 +1,4 @@
-import { WarningCircle } from "@phosphor-icons/react/dist/ssr";
+import { AlertCircle } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Brand } from "@/components/brand";
 import { LanguageSwitcher } from "@/components/language-switcher";
@@ -13,7 +13,7 @@ export default async function AuthErrorPage() {
         <LanguageSwitcher />
       </header>
       <section className="verify-card verify-expired">
-        <span><WarningCircle size={28} weight="duotone" /></span>
+        <span><AlertCircle size={28} /></span>
         <h1>{t("title")}</h1>
         <p>{t("description")}</p>
         <Link href="/auth" className="button primary">{t("action")}</Link>

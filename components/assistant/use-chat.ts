@@ -1,6 +1,6 @@
 "use client";
 
-import {useCallback, useEffect, useRef, useState} from "react";
+import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import type {AssistantAnswer, ChatMessage, ChatStreamEvent, EvidenceSource} from "@/lib/bis/types";
 
 /** How many prior turns travel back to the model as `history`. */
@@ -18,6 +18,8 @@ export interface UseChatResult {
     streamingText: string;
     /** Evidence that arrived before the final answer (kept in sync with the answer once it lands). */
     pendingSources: EvidenceSource[];
+    /** Active evidence sources from answer or stream (always an array). */
+    sources: EvidenceSource[];
     isLoading: boolean;
     error: string | null;
     ask: (question: string, locale?: string) => Promise<void>;
@@ -249,5 +251,16 @@ export function useChat(): UseChatResult {
         }
     }, [pushMessage]);
 
-    return {messages, status, streamingText, pendingSources, isLoading, error, ask, stop, reset};
+    const sources = useMemo(() => {
+        if (pendingSources.length > 0) return pendingSources;
+        for (let i = messages.length - 1; i >= 0; i--) {
+            const answerSources = messages[i]?.answer?.sources;
+            if (answerSources && answerSources.length > 0) {
+                return answerSources;
+            }
+        }
+        return [];
+    }, [messages, pendingSources]);
+
+    return {messages, status, streamingText, pendingSources, sources, isLoading, error, ask, stop, reset};
 }

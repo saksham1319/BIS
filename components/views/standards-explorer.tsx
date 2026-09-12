@@ -1,20 +1,20 @@
 "use client";
 
 import {
-    ArrowClockwise,
-    ArrowSquareOut,
-    Books,
-    CaretDown,
-    CaretRight,
-    CheckCircle,
-    FilePdf,
+    AlertCircle,
+    BookOpen,
+    CheckCircle2,
+    ChevronDown,
+    ChevronRight,
+    ExternalLink,
+    FileText,
+    FlaskConical,
     Gavel,
-    MagnifyingGlass,
+    RotateCcw,
+    Search,
     ShieldCheck,
-    TestTube,
-    WarningCircle,
     X,
-} from "@phosphor-icons/react";
+} from "lucide-react";
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {
     getQcoById,
@@ -55,10 +55,10 @@ const statusPill: Record<StandardStatus, { className: string; label: string }> =
 
 function StatusPill({status}: { status: StandardStatus }) {
     const pill = statusPill[status];
-    const Icon = status === "active" ? CheckCircle : status === "superseded" ? ArrowClockwise : WarningCircle;
+    const Icon = status === "active" ? CheckCircle2 : status === "superseded" ? RotateCcw : AlertCircle;
     return (
         <span className={pill.className}>
-            <Icon size={13} weight={status === "active" ? "fill" : "regular"}/> {pill.label}
+            <Icon size={13}/> {pill.label}
         </span>
     );
 }
@@ -175,7 +175,7 @@ export function StandardsExplorer({
             </div>
 
             <div className="explorer-search">
-                <MagnifyingGlass size={21}/>
+                <Search size={21}/>
                 <label htmlFor="standards-search" className="sr-only">Search Indian Standards</label>
                 <input
                     id="standards-search"
@@ -260,7 +260,7 @@ export function StandardsExplorer({
             <div className="standards-results">
                 {results.length === 0 ? (
                     <div className="empty-state">
-                        <MagnifyingGlass size={28}/>
+                        <Search size={28}/>
                         <h2>{filtersActive ? "No standards match these filters" : "No standards loaded"}</h2>
                         <p>
                             {filtersActive
@@ -284,7 +284,7 @@ export function StandardsExplorer({
                                 else rowRefs.current.delete(standard.id);
                             }}
                         >
-                            <div className="standard-file"><FilePdf size={24} weight="duotone"/></div>
+                            <div className="standard-file"><FileText size={24}/></div>
 
                             <button
                                 type="button"
@@ -314,7 +314,7 @@ export function StandardsExplorer({
                                         className="button ghost compact"
                                         onClick={() => onCitation(standard.id)}
                                     >
-                                        <ArrowSquareOut size={15}/> View document
+                                        <ExternalLink size={15}/> View document
                                     </button>
                                 )}
                                 <button
@@ -322,7 +322,7 @@ export function StandardsExplorer({
                                     className="button secondary compact"
                                     onClick={() => setSelectedId(expanded ? undefined : standard.id)}
                                 >
-                                    {expanded ? <CaretDown size={14}/> : <CaretRight size={14}/>}
+                                    {expanded ? <ChevronDown size={14}/> : <ChevronRight size={14}/>}
                                     {expanded ? "Hide detail" : "Detail"}
                                 </button>
                             </div>
@@ -380,28 +380,28 @@ function StandardDetail({
                     <div className="revision-links">
                         {standard.supersedes && (
                             <span className="active-filter-note">
-                                <ArrowClockwise size={14}/> Supersedes{" "}
+                                <RotateCcw size={14}/> Supersedes{" "}
                                 {supersedes ? (
                                     <button
                                         type="button"
                                         className="inline-action"
                                         onClick={() => onOpenStandard(supersedes)}
                                     >
-                                        {supersedes.number} <CaretRight size={12}/>
+                                        {supersedes.number} <ChevronRight size={12}/>
                                     </button>
                                 ) : <strong>{standard.supersedes}</strong>}
                             </span>
                         )}
                         {standard.supersededBy && (
                             <span className="active-filter-note">
-                                <WarningCircle size={14}/> Superseded by{" "}
+                                <AlertCircle size={14}/> Superseded by{" "}
                                 {supersededBy ? (
                                     <button
                                         type="button"
                                         className="inline-action"
                                         onClick={() => onOpenStandard(supersededBy)}
                                     >
-                                        {supersededBy.number} <CaretRight size={12}/>
+                                        {supersededBy.number} <ChevronRight size={12}/>
                                     </button>
                                 ) : <strong>{standard.supersededBy}</strong>}
                             </span>
@@ -473,7 +473,7 @@ function StandardDetail({
                                 <span className="field-label spaced">Required tests</span>
                                 <div className="chip-row">
                                     {standard.tests.map((test) => (
-                                        <span className="chip navy" key={test}><TestTube size={12}/> {test}</span>
+                                        <span className="chip navy" key={test}><FlaskConical size={12}/> {test}</span>
                                     ))}
                                 </div>
                             </>
@@ -503,7 +503,7 @@ function StandardDetail({
                                             className="inline-action"
                                             onClick={() => onOpenDocument(standard.id, clause.id)}
                                         >
-                                            <FilePdf size={14}/> View document
+                                            <FileText size={14}/> View document
                                         </button>
                                     </div>
                                 )}
@@ -525,7 +525,7 @@ function StandardDetail({
                                 onClick={() => onOpenStandard(item)}
                                 title={item.title}
                             >
-                                <Books size={12}/> {item.number}
+                                <BookOpen size={12}/> {item.number}
                             </button>
                         ))}
                     </div>

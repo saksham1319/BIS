@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, Clock, EnvelopeOpen, WarningCircle } from "@phosphor-icons/react";
+import { AlertCircle, ArrowLeft, Clock, MailOpen } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { FormEvent, useEffect, useState } from "react";
 import { Brand } from "@/components/brand";
@@ -116,13 +116,13 @@ export default function VerifyPage() {
         <Link href="/auth" className="auth-back"><ArrowLeft size={16} /> {common("back")}</Link>
         {expired ? (
           <div className="verify-expired">
-            <span><WarningCircle size={26} weight="duotone" /></span>
+            <span><AlertCircle size={26} /></span>
             <h1 id="verify-title">{t("expired")}</h1>
             <Link href="/auth" className="button primary">{t("startAgain")}</Link>
           </div>
         ) : (
           <>
-            <div className="verify-icon"><EnvelopeOpen size={28} weight="duotone" /></div>
+            <div className="verify-icon"><MailOpen size={28} /></div>
             <h1 id="verify-title">{t("title")}</h1>
             <p>{t("description", { email: email || "..." })}</p>
             <div className="verify-timer"><Clock size={16} /> {t("expires", { time: formatTime(secondsLeft) })}</div>

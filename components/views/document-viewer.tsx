@@ -1,14 +1,14 @@
 "use client";
 
 import {
+    AlertCircle,
     ArrowLeft,
-    CaretLeft,
-    CaretRight,
+    ChevronLeft,
+    ChevronRight,
     Copy,
     FileText,
-    WarningCircle,
     X,
-} from "@phosphor-icons/react";
+} from "lucide-react";
 import {useCallback, useEffect, useMemo, useRef, useState} from "react";
 import {getStandardById, getStandardByNumber} from "@/lib/bis/data";
 import {retrieveById} from "@/lib/bis/retrieval";
@@ -236,7 +236,7 @@ export function DocumentViewer({standardId, clauseId, sourceId, onClose}: Docume
                     tabIndex={-1}
                     onMouseDown={(event) => event.stopPropagation()}
                 >
-                    <WarningCircle size={30} weight="duotone"/>
+                    <AlertCircle size={30}/>
                     <h2 id="document-unavailable-title">Source unavailable</h2>
                     <p>
                         {source
@@ -282,7 +282,7 @@ export function DocumentViewer({standardId, clauseId, sourceId, onClose}: Docume
                             disabled={index === 0}
                             aria-label="Previous clause"
                         >
-                            <CaretLeft size={15}/> <span className="doc-nav-label">Previous</span>
+                            <ChevronLeft size={15}/> <span className="doc-nav-label">Previous</span>
                         </button>
                         <span className="doc-page-indicator">Page {clause.page} of {totalPages}</span>
                         <button
@@ -292,7 +292,7 @@ export function DocumentViewer({standardId, clauseId, sourceId, onClose}: Docume
                             disabled={index === clauses.length - 1}
                             aria-label="Next clause"
                         >
-                            <span className="doc-nav-label">Next</span> <CaretRight size={15}/>
+                            <span className="doc-nav-label">Next</span> <ChevronRight size={15}/>
                         </button>
                         <button type="button" onClick={copyCitation}>
                             <Copy size={16}/> Copy citation

@@ -1,29 +1,28 @@
 "use client";
 
 import {
+    AlertCircle,
     ArrowRight,
     ArrowUp,
-    Books,
-    CaretRight,
-    Certificate,
-    ChatTeardropDots,
-    ClockCounterClockwise,
-    DiamondsFour,
-    FilePdf,
+    Award,
+    BookOpen,
+    ChevronRight,
+    FileText,
     Files,
-    Flask,
-    List,
-    MagnifyingGlass,
-    Microphone,
+    FlaskConical,
+    Gem,
+    History,
+    Menu,
+    Mic,
+    PanelLeft,
     Plus,
-    SealCheck,
+    Search,
     ShieldCheck,
-    SidebarSimple,
-    UserCircle,
-    WarningCircle,
+    Sparkles,
+    User,
     X,
-} from "@phosphor-icons/react";
-import type {Icon} from "@phosphor-icons/react";
+} from "lucide-react";
+import type {LucideIcon} from "lucide-react";
 import {useLocale, useTranslations} from "next-intl";
 import {FormEvent, useEffect, useRef, useState} from "react";
 import type {Locale} from "@/i18n/locales";
@@ -52,18 +51,18 @@ type View =
     | "dashboard";
 
 type NavKey = "assistant" | "products" | "standards" | "certification" | "labs" | "hallmarking" | "history" | "reports";
-type NavItem = { id: View; labelKey: NavKey; icon: Icon };
+type NavItem = { id: View; labelKey: NavKey; icon: LucideIcon };
 
 const exampleQuestion =
     "I manufacture stainless steel water bottles. Which Indian Standard applies and do I need BIS certification?";
 
 const navItems: NavItem[] = [
-    {id: "assistant", labelKey: "assistant", icon: ChatTeardropDots},
-    {id: "standards", labelKey: "standards", icon: Books},
-    {id: "certification", labelKey: "certification", icon: Certificate},
-    {id: "labs", labelKey: "labs", icon: Flask},
-    {id: "hallmarking", labelKey: "hallmarking", icon: DiamondsFour},
-    {id: "history", labelKey: "history", icon: ClockCounterClockwise},
+    {id: "assistant", labelKey: "assistant", icon: Sparkles},
+    {id: "standards", labelKey: "standards", icon: BookOpen},
+    {id: "certification", labelKey: "certification", icon: Award},
+    {id: "labs", labelKey: "labs", icon: FlaskConical},
+    {id: "hallmarking", labelKey: "hallmarking", icon: Gem},
+    {id: "history", labelKey: "history", icon: History},
     {id: "reports", labelKey: "reports", icon: Files},
 ];
 
@@ -90,10 +89,10 @@ function Landing({onEnter, onNavigate, onSignIn}: {
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const promptExamples = [t("promptOne"), t("promptTwo"), t("promptThree"), t("promptFour")];
     const quickActions = [
-        {label: t("quickStandard"), icon: MagnifyingGlass},
+        {label: t("quickStandard"), icon: Search},
         {label: t("quickCertification"), icon: ShieldCheck},
-        {label: t("quickLab"), icon: Flask},
-        {label: t("quickAsk"), icon: ChatTeardropDots},
+        {label: t("quickLab"), icon: FlaskConical},
+        {label: t("quickAsk"), icon: Sparkles},
     ];
 
     const {
@@ -158,7 +157,7 @@ function Landing({onEnter, onNavigate, onSignIn}: {
             <main>
                 <section className="hero-section">
                     <div className="hero-copy">
-                        <div className="trust-line"><ShieldCheck size={18} weight="fill"/><span>{t("trust")}</span>
+                        <div className="trust-line"><ShieldCheck size={18}/><span>{t("trust")}</span>
                         </div>
                         <h1><span>{t("titleOne")}</span><span>{t("titleTwo")}</span></h1>
                         <p>{t("description")}</p>
@@ -170,12 +169,11 @@ function Landing({onEnter, onNavigate, onSignIn}: {
                     <div className="hero-workbench" aria-label="Ask BIS Saathi">
                         <div className="workbench-header">
                             <div><strong>{t("workbenchTitle")}</strong></div>
-                            <span className="verified-chip"><SealCheck size={15}
-                                                                       weight="fill"/> {t("sourceAware")}</span>
+                            <span className="verified-chip"><ShieldCheck size={15}/> {t("sourceAware")}</span>
                         </div>
                         {speechError ? (
                             <div className="assistant-error" role="alert" style={{marginBottom: 12}}>
-                                <WarningCircle size={18} weight="fill"/>
+                                <AlertCircle size={18} />
                                 <p>{speechError}</p>
                                 <button
                                     type="button"
@@ -241,7 +239,7 @@ function Landing({onEnter, onNavigate, onSignIn}: {
                                                   : "Voice input (speak to type)"
                                         }
                                     >
-                                        <Microphone size={19} weight={isListening ? "fill" : "bold"} aria-hidden="true"/>
+                                        <Mic size={18} aria-hidden="true"/>
                                         {isListening ? <span className="mic-label">Listening…</span> : null}
                                     </button>
                                     <button
@@ -250,7 +248,7 @@ function Landing({onEnter, onNavigate, onSignIn}: {
                                         aria-label="Ask BIS Saathi"
                                         disabled={!question.trim() || isListening}
                                     >
-                                        <ArrowUp size={20} weight="bold"/>
+                                        <ArrowUp size={19} />
                                     </button>
                                 </div>
                             </div>
@@ -270,7 +268,7 @@ function Landing({onEnter, onNavigate, onSignIn}: {
                             const ActionIcon = action.icon;
                             return <button type="button" key={action.label}
                                            onClick={() => onEnter(promptExamples[index])}>
-                                <ActionIcon size={22}/><span>{action.label}</span><CaretRight size={15}
+                                <ActionIcon size={20}/><span>{action.label}</span><ChevronRight size={15}
                                                                                               className="action-arrow"/>
                             </button>;
                         })}
@@ -292,9 +290,9 @@ function Landing({onEnter, onNavigate, onSignIn}: {
                             <button type="button" aria-label="Step 1: Inspect cited clause in Indian Standard" onClick={() => onEnter(exampleQuestion)}>1</button>
                         </div>
                         <ArrowRight size={22} className="flow-arrow"/>
-                        <div className="flow-source"><FilePdf size={26} weight="duotone"/>
+                        <div className="flow-source"><FileText size={24} />
                             <div><span>{t("originalSource")}</span><strong>IS 17803:2022</strong><p>Clause 4.1</p></div>
-                            <SealCheck size={20} weight="fill"/></div>
+                            <ShieldCheck size={20} /></div>
                     </div>
                 </section>
             </main>
@@ -322,13 +320,13 @@ function AppSidebar({active, onChange, collapsed, onCollapse, onHome, onSignIn}:
                 <button type="button" className="brand-button" onClick={onHome} aria-label="Go to landing page"><Brand
                     compact={collapsed}/></button>
                 {!collapsed &&
-                    <IconButton label="Collapse sidebar" onClick={onCollapse}><SidebarSimple size={19}/></IconButton>}
+                    <IconButton label="Collapse sidebar" onClick={onCollapse}><PanelLeft size={19}/></IconButton>}
             </div>
             {collapsed &&
-                <IconButton label="Expand sidebar" onClick={onCollapse} className="collapsed-toggle"><SidebarSimple
+                <IconButton label="Expand sidebar" onClick={onCollapse} className="collapsed-toggle"><PanelLeft
                     size={19}/></IconButton>}
             <button type="button" className={`new-query-button ${collapsed ? "compact" : ""}`}
-                    onClick={() => onChange("assistant")}><Plus size={18} weight="bold"/>{!collapsed &&
+                    onClick={() => onChange("assistant")}><Plus size={18} />{!collapsed &&
                 <span>{t("newQuery")}</span>}</button>
             <nav className="sidebar-nav" aria-label="Workspace navigation">
                 {navItems.map((item) => {
@@ -337,14 +335,13 @@ function AppSidebar({active, onChange, collapsed, onCollapse, onHome, onSignIn}:
                     return <button type="button" key={item.id} className={active === item.id ? "active" : ""}
                                    onClick={() => onChange(item.id)}
                                    aria-current={active === item.id ? "page" : undefined}
-                                   title={collapsed ? label : undefined}><ItemIcon size={19}
-                                                                                   weight={active === item.id ? "fill" : "regular"}/>{!collapsed &&
+                                   title={collapsed ? label : undefined}><ItemIcon size={18} />{!collapsed &&
                         <span>{label}</span>}</button>;
                 })}
             </nav>
             <div className="sidebar-bottom">
                 <button type="button" className="profile-button" onClick={onSignIn}><span
-                    className="profile-avatar"><UserCircle size={22}/></span>{!collapsed && <span
+                    className="profile-avatar"><User size={20}/></span>{!collapsed && <span
                     className="profile-copy"><strong>{common("signIn")}</strong><small>{t("saveWork")}</small></span>}
                 </button>
             </div>
@@ -361,8 +358,8 @@ function AppTopbar({title, onMenu, onSignIn}: {
     const common = useTranslations("Common");
     return <header className="app-topbar">
         <div className="topbar-left"><IconButton label="Open navigation" onClick={onMenu}
-                                                 className="mobile-menu-button"><List size={21}/></IconButton><span
-            className="breadcrumb">{t("workspace")}</span><CaretRight size={13}/><strong>{title}</strong>
+                                                 className="mobile-menu-button"><Menu size={20}/></IconButton><span
+            className="breadcrumb">{t("workspace")}</span><ChevronRight size={13}/><strong>{title}</strong>
             <span className="status complete" style={{marginLeft: 8}} title="Grounded with Gemini 3.5 Flash">
                 <span style={{width: 6, height: 6, borderRadius: "50%", background: "currentColor"}}/>
                 AI Online
@@ -434,19 +431,19 @@ function HistoryView({onSelectQuery}: { onSelectQuery: (query: string) => void }
                             onClick={() => onSelectQuery(q)}
                         >
                             <span className="saved-icon">
-                                <ChatTeardropDots size={19} />
+                                <Sparkles size={17} />
                             </span>
                             <span className="saved-copy">
                                 <strong>{q}</strong>
                                 <small>Query #{queries.length - index} <span>•</span> Click to open in Assistant</small>
                             </span>
-                            <CaretRight size={17} />
+                            <ChevronRight size={16} />
                         </button>
                     ))}
                 </div>
             ) : (
                 <div className="empty-state" style={{padding: "48px 16px", textAlign: "center", color: "var(--muted)"}}>
-                    <ClockCounterClockwise size={40} weight="thin" style={{margin: "0 auto 16px", display: "block"}} />
+                    <History size={40} style={{margin: "0 auto 16px", display: "block"}} />
                     <h3 style={{fontSize: "1.1rem", marginBottom: 8, color: "var(--foreground)"}}>No saved queries yet</h3>
                     <p style={{maxWidth: 420, margin: "0 auto 24px", fontSize: "0.9rem", lineHeight: 1.5}}>
                         Queries asked in the Assistant are saved locally in your browser so you can revisit them anytime.
@@ -507,55 +504,62 @@ function GenericContent({
 
 export function BISIntelligence() {
     const router = useRouter();
-    const locale = useLocale();
     const navigation = useTranslations("Navigation");
-    const {messages, status, streamingText, pendingSources, isLoading, error, ask, stop} = useChat();
     const [screen, setScreen] = useState<"landing" | "app">("landing");
     const [view, setView] = useState<View>("assistant");
     const [navPayload, setNavPayload] = useState<NavPayload>(null);
-    const [sourceOpen, setSourceOpen] = useState(true);
-    const [selectedSource, setSelectedSource] = useState<string | null>(null);
     const [documentTarget, setDocumentTarget] = useState<DocumentTarget | null>(null);
     const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
     const [mobileNavOpen, setMobileNavOpen] = useState(false);
+    const [sourceOpen, setSourceOpen] = useState(false);
+    const [activeSource, setActiveSource] = useState<string | null>(null);
 
-    // Derive the active source rather than syncing it in an effect: when a new answer
-    // replaces the evidence list, any stale selection falls back to the first source.
-    const sources = pendingSources;
-    const activeSource = sources.some((source) => source.id === selectedSource)
-        ? selectedSource
-        : sources[0]?.id ?? null;
+    const {
+        messages,
+        status,
+        streamingText,
+        isLoading,
+        error,
+        sources = [],
+        ask,
+        stop,
+    } = useChat();
 
+    // Auto-open sources when sources arrive on large desktop screens (> 980px)
     useEffect(() => {
-        const frame = window.requestAnimationFrame(() => {
-            const requestedView = new URLSearchParams(window.location.search).get("view") as View | null;
-            if (requestedView && [...navItems.map((item) => item.id), "dashboard"].includes(requestedView)) {
-                setScreen("app");
-                setView(requestedView);
-                setSourceOpen(requestedView === "assistant" && window.innerWidth > 980);
+        let frameId: number | null = null;
+        if ((sources?.length ?? 0) > 0 && typeof window !== "undefined" && window.innerWidth > 980) {
+            frameId = window.requestAnimationFrame(() => {
+                setSourceOpen(true);
+            });
+        }
+        return () => {
+            if (frameId !== null) {
+                window.cancelAnimationFrame(frameId);
             }
-        });
-        return () => window.cancelAnimationFrame(frame);
-    }, []);
+        };
+    }, [sources?.length]);
 
-    function enterAssistant(nextQuestion: string) {
+    function enterAssistant(question?: string) {
         setScreen("app");
         setView("assistant");
-        setNavPayload(null);
-        setSourceOpen(window.innerWidth > 980);
-        void ask(nextQuestion.trim() || exampleQuestion, locale);
+        setMobileNavOpen(false);
+        if (typeof window !== "undefined" && window.innerWidth > 980) {
+            setSourceOpen(true);
+        }
+        if (question) {
+            ask(question);
+        }
     }
 
     function navigate(nextView: View, payload?: { standardId?: string; query?: string }) {
-        setScreen("app");
         setView(nextView);
         setNavPayload(payload ?? null);
         setMobileNavOpen(false);
-        if (nextView !== "assistant") setSourceOpen(false);
     }
 
     function openCitation(sourceId: string) {
-        setSelectedSource(sourceId);
+        setActiveSource(sourceId);
         setSourceOpen(true);
     }
 
@@ -563,17 +567,7 @@ export function BISIntelligence() {
         router.push("/auth");
     }
 
-    const viewTitle = {
-        assistant: navigation("assistant"),
-        products: navigation("productCompliance"),
-        standards: navigation("standardsExplorer"),
-        certification: navigation("certification"),
-        labs: navigation("testingLabs"),
-        hallmarking: navigation("hallmarking"),
-        history: navigation("history"),
-        reports: navigation("documentsReports"),
-        dashboard: navigation("dashboard"),
-    }[view];
+    const viewTitle = navigation(view as NavKey);
 
     return (
         <>
@@ -598,8 +592,8 @@ export function BISIntelligence() {
                     </div>
                     <div className="app-main"><AppTopbar title={viewTitle} onMenu={() => setMobileNavOpen(true)}
                                                          onSignIn={openAuth}/>
-                        <div className={`workspace ${view === "assistant" && sourceOpen ? "with-evidence" : ""}`}>
-                            <main className="workspace-main">{view === "assistant" ?
+                        <div className={`workspace ${view === "assistant" && sourceOpen && (sources?.length ?? 0) > 0 ? "with-evidence" : ""}`}>
+                            <main className={`workspace-main ${view === "assistant" ? "is-assistant" : ""}`}>{view === "assistant" ?
                                 <ChatThread messages={messages} status={status} streamingText={streamingText}
                                             isLoading={isLoading} error={error} onAsk={enterAssistant} onStop={stop}
                                             onCitation={openCitation}
@@ -607,11 +601,11 @@ export function BISIntelligence() {
                                 <GenericContent view={view} navPayload={navPayload}
                                                 onOpenDocument={setDocumentTarget}
                                                 onSelectQuery={enterAssistant}/>}</main>
-                            {view === "assistant" && sourceOpen &&
-                                <EvidencePanel sources={sources} selected={activeSource} onSelect={setSelectedSource}
+                            {view === "assistant" && sourceOpen && (sources?.length ?? 0) > 0 &&
+                                <EvidencePanel sources={sources} selected={activeSource} onSelect={setActiveSource}
                                                onClose={() => setSourceOpen(false)}
                                                onOpenDocument={(source) => setDocumentTarget({sourceId: source.id})}/>}
-                            {view === "assistant" && !sourceOpen && sources.length > 0 &&
+                            {view === "assistant" && !sourceOpen && (sources?.length ?? 0) > 0 &&
                                 <button type="button" className="floating-sources-button"
                                         onClick={() => setSourceOpen(true)}><Files
                                     size={17}/> {sources.length} {sources.length === 1 ? "source" : "sources"}
@@ -621,11 +615,10 @@ export function BISIntelligence() {
                          aria-label="Mobile navigation">{[navItems[0], navItems[1], navItems[2], navItems[3]].map((item) => {
                         const ItemIcon = item.icon;
                         return <button type="button" key={item.id} className={view === item.id ? "active" : ""}
-                                       onClick={() => navigate(item.id)}><ItemIcon size={20}
-                                                                                   weight={view === item.id ? "fill" : "regular"}/><span>{navigation(item.labelKey)}</span>
+                                       onClick={() => navigate(item.id)}><ItemIcon size={20} /><span>{navigation(item.labelKey)}</span>
                         </button>;
                     })}
-                        <button type="button" onClick={() => setMobileNavOpen(true)}><List
+                        <button type="button" onClick={() => setMobileNavOpen(true)}><Menu
                             size={20}/><span>{navigation("more")}</span></button>
                     </nav>
                 </div>}

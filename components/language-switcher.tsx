@@ -1,6 +1,6 @@
 "use client";
 
-import { Globe } from "@phosphor-icons/react";
+import { Globe } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useTransition } from "react";
 import { LOCALE_NAMES, SUPPORTED_LOCALES, type Locale } from "@/i18n/locales";
