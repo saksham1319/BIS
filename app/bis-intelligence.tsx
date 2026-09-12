@@ -2,39 +2,35 @@
 
 import {
     ArrowRight,
-    ArrowSquareOut,
     ArrowUp,
-    BookmarkSimple,
     Books,
-    Buildings,
     CaretRight,
     Certificate,
     ChatTeardropDots,
-    Check,
-    ClipboardText,
     ClockCounterClockwise,
     DiamondsFour,
     FilePdf,
     Files,
     Flask,
-    IdentificationBadge,
     List,
     MagnifyingGlass,
-    Package,
+    Microphone,
     Plus,
     SealCheck,
     ShieldCheck,
     SidebarSimple,
     UserCircle,
-    Warning,
+    WarningCircle,
+    X,
 } from "@phosphor-icons/react";
 import type {Icon} from "@phosphor-icons/react";
 import {useLocale, useTranslations} from "next-intl";
 import {FormEvent, useEffect, useRef, useState} from "react";
+import type {Locale} from "@/i18n/locales";
 import {Brand} from "@/components/brand";
 import {LanguageSwitcher} from "@/components/language-switcher";
 import {useRouter} from "@/i18n/navigation";
-import {ChatThread, EvidencePanel, useChat} from "@/components/assistant";
+import {ChatThread, EvidencePanel, STORAGE_KEY, useChat, useSpeechRecognition} from "@/components/assistant";
 import {
     CertificationGuide,
     DocumentViewer,
@@ -63,7 +59,6 @@ const exampleQuestion =
 
 const navItems: NavItem[] = [
     {id: "assistant", labelKey: "assistant", icon: ChatTeardropDots},
-    {id: "products", labelKey: "products", icon: Package},
     {id: "standards", labelKey: "standards", icon: Books},
     {id: "certification", labelKey: "certification", icon: Certificate},
     {id: "labs", labelKey: "labs", icon: Flask},
@@ -90,6 +85,7 @@ function Landing({onEnter, onNavigate, onSignIn}: {
     const t = useTranslations("Landing");
     const navigation = useTranslations("Navigation");
     const common = useTranslations("Common");
+    const locale = useLocale() as Locale;
     const [question, setQuestion] = useState("");
     const inputRef = useRef<HTMLTextAreaElement>(null);
     const promptExamples = [t("promptOne"), t("promptTwo"), t("promptThree"), t("promptFour")];
@@ -100,9 +96,39 @@ function Landing({onEnter, onNavigate, onSignIn}: {
         {label: t("quickAsk"), icon: ChatTeardropDots},
     ];
 
+    const {
+        isSupported,
+        isListening,
+        error: speechError,
+        toggleListening,
+        stopListening,
+        clearError: clearSpeechError,
+    } = useSpeechRecognition({
+        locale,
+        onTranscript: (updatedDraft) => {
+            setQuestion(updatedDraft);
+        },
+    });
+
+    const prevListeningRef = useRef(false);
+    useEffect(() => {
+        if (prevListeningRef.current && !isListening) {
+            inputRef.current?.focus();
+        }
+        prevListeningRef.current = isListening;
+    }, [isListening]);
+
     function submit(event: FormEvent) {
         event.preventDefault();
-        onEnter(question.trim() || exampleQuestion);
+        const trimmed = question.trim();
+        if (!trimmed) {
+            inputRef.current?.focus();
+            return;
+        }
+        if (isListening) {
+            stopListening();
+        }
+        onEnter(trimmed);
     }
 
     function choosePrompt(prompt: string) {
@@ -122,10 +148,7 @@ function Landing({onEnter, onNavigate, onSignIn}: {
                     <button onClick={() => onNavigate("hallmarking")}>{navigation("hallmarking")}</button>
                 </nav>
                 <div className="header-actions">
-                    <span className="status complete" title="Grounded with Gemini 3.5 Flash">
-                        <span style={{width: 6, height: 6, borderRadius: "50%", background: "currentColor"}} />
-                        AI Connected
-                    </span>
+
                     <LanguageSwitcher/>
                     <button type="button" className="button secondary sign-in-top"
                             onClick={onSignIn}>{common("signIn")}</button>
@@ -150,16 +173,86 @@ function Landing({onEnter, onNavigate, onSignIn}: {
                             <span className="verified-chip"><SealCheck size={15}
                                                                        weight="fill"/> {t("sourceAware")}</span>
                         </div>
+                        {speechError ? (
+                            <div className="assistant-error" role="alert" style={{marginBottom: 12}}>
+                                <WarningCircle size={18} weight="fill"/>
+                                <p>{speechError}</p>
+                                <button
+                                    type="button"
+                                    className="icon-button"
+                                    aria-label="Dismiss error"
+                                    title="Dismiss error"
+                                    onClick={clearSpeechError}
+                                >
+                                    <X size={15}/>
+                                </button>
+                            </div>
+                        ) : null}
                         <form className="hero-composer" onSubmit={submit}>
                             <label htmlFor="landing-question" className="sr-only">Ask anything about BIS</label>
-                            <textarea ref={inputRef} id="landing-question" value={question}
-                                      onChange={(event) => setQuestion(event.target.value)}
-                                      placeholder={t("placeholder")} rows={3}/>
+                            <textarea
+                                ref={inputRef}
+                                id="landing-question"
+                                value={question}
+                                onChange={(event) => setQuestion(event.target.value)}
+                                onKeyDown={(event) => {
+                                    if (event.key === "Enter" && !event.shiftKey) {
+                                        if (event.nativeEvent.isComposing) return;
+                                        event.preventDefault();
+                                        submit(event);
+                                    }
+                                }}
+                                placeholder={t("placeholder")}
+                                rows={3}
+                            />
                             <div className="composer-footer">
-                                <div className="composer-tools"><span
-                                    className="composer-hint">{t("describeProduct")}</span></div>
-                                <button type="submit" className="send-button" aria-label="Ask BIS Saathi"><ArrowUp
-                                    size={20} weight="bold"/></button>
+                                <div className="composer-tools">
+                                    {isListening ? (
+                                        <span className="composer-listening-status" aria-live="polite">
+                                            <span className="mic-listening-dot" aria-hidden="true"/>
+                                            Listening…
+                                        </span>
+                                    ) : (
+                                        <span className="composer-hint">{t("describeProduct")}</span>
+                                    )}
+                                </div>
+                                <div className="composer-actions">
+                                    <button
+                                        type="button"
+                                        className={`mic-button ${isListening ? "is-listening" : ""}`}
+                                        onClick={() => {
+                                            clearSpeechError();
+                                            toggleListening(question);
+                                        }}
+                                        disabled={!isSupported}
+                                        aria-label={
+                                            !isSupported
+                                                ? "Voice input isn't supported in this browser"
+                                                : isListening
+                                                  ? "Stop listening"
+                                                  : "Start voice input"
+                                        }
+                                        aria-pressed={isListening}
+                                        title={
+                                            !isSupported
+                                                ? "Voice input isn't supported in this browser."
+                                                : isListening
+                                                  ? "Listening… Click to stop"
+                                                  : "Voice input (speak to type)"
+                                        }
+                                    >
+                                        <Microphone size={19} weight={isListening ? "fill" : "bold"} aria-hidden="true"/>
+                                        {isListening ? <span className="mic-label">Listening…</span> : null}
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="send-button"
+                                        aria-label="Ask BIS Saathi"
+                                        disabled={!question.trim() || isListening}
+                                    >
+                                        <ArrowUp size={20} weight="bold"/>
+                                    </button>
+                                </div>
                             </div>
                         </form>
                         <div className="prompt-list" aria-label="Example questions">
@@ -176,7 +269,7 @@ function Landing({onEnter, onNavigate, onSignIn}: {
                         {quickActions.map((action, index) => {
                             const ActionIcon = action.icon;
                             return <button type="button" key={action.label}
-                                           onClick={() => index === 0 ? choosePrompt(promptExamples[0]) : onEnter(promptExamples[index])}>
+                                           onClick={() => onEnter(promptExamples[index])}>
                                 <ActionIcon size={22}/><span>{action.label}</span><CaretRight size={15}
                                                                                               className="action-arrow"/>
                             </button>;
@@ -196,7 +289,7 @@ function Landing({onEnter, onNavigate, onSignIn}: {
                         <div className="flow-answer">
                             <span>{t("directAnswer")}</span><strong>{t("certificationMayApply")}</strong>
                             <p>{t("confirmScope")}</p>
-                            <button type="button" onClick={() => onEnter(exampleQuestion)}>1</button>
+                            <button type="button" aria-label="Step 1: Inspect cited clause in Indian Standard" onClick={() => onEnter(exampleQuestion)}>1</button>
                         </div>
                         <ArrowRight size={22} className="flow-arrow"/>
                         <div className="flow-source"><FilePdf size={26} weight="duotone"/>
@@ -271,7 +364,7 @@ function AppTopbar({title, onMenu, onSignIn}: {
                                                  className="mobile-menu-button"><List size={21}/></IconButton><span
             className="breadcrumb">{t("workspace")}</span><CaretRight size={13}/><strong>{title}</strong>
             <span className="status complete" style={{marginLeft: 8}} title="Grounded with Gemini 3.5 Flash">
-                <span style={{width: 6, height: 6, borderRadius: "50%", background: "currentColor"}} />
+                <span style={{width: 6, height: 6, borderRadius: "50%", background: "currentColor"}}/>
                 AI Online
             </span>
         </div>
@@ -287,201 +380,129 @@ function PageHeading({title, description, action}: { title: string; description:
         {action}</div>;
 }
 
-function ProductsView({onNavigate}: { onNavigate: (view: View) => void }) {
-    const steps = [
-        {label: "Product", detail: "Bottle profile", state: "done", icon: Package},
-        {label: "Indian Standard", detail: "2 relevant", state: "done", icon: Books},
-        {label: "QCO check", detail: "Review required", state: "current", icon: ShieldCheck},
-        {label: "Certification", detail: "Scheme-I", state: "upcoming", icon: Certificate},
-        {label: "Testing", detail: "6 tests", state: "upcoming", icon: Flask},
-        {label: "Laboratory", detail: "14 matching", state: "upcoming", icon: Buildings},
-        {label: "Licence", detail: "Final outcome", state: "upcoming", icon: IdentificationBadge},
-    ];
+function getInitialStoredQueries(): string[] {
+    if (typeof window === "undefined") return [];
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed)) {
+                const userQueries = parsed
+                    .filter((m: { role: string; content?: string }) => m.role === "user" && m.content)
+                    .map((m: { content: string }) => m.content.trim())
+                    .filter(Boolean);
+                return Array.from(new Set(userQueries));
+            }
+        }
+    } catch {
+        /* ignore storage parse errors */
+    }
+    return [];
+}
+
+function HistoryView({onSelectQuery}: { onSelectQuery: (query: string) => void }) {
+    const [queries, setQueries] = useState<string[]>(getInitialStoredQueries);
+
+    const handleClear = () => {
+        try {
+            if (typeof window !== "undefined") {
+                localStorage.removeItem(STORAGE_KEY);
+            }
+            setQueries([]);
+        } catch {
+            /* ignore */
+        }
+    };
+
     return (
-        <div className="workspace-page products-page">
-            <PageHeading title="Product compliance"
-                         description="Turn a product description into a traceable compliance path."
-                         action={<button type="button" className="button primary"><Plus size={17}/> Add product
-                         </button>}/>
-            <div className="product-overview">
-                <div className="product-identity"><span className="product-icon"><Package size={28}
-                                                                                          weight="duotone"/></span>
-                    <div><span>Product profile</span><h2>Stainless steel water bottle</h2><p>Vacuum-insulated domestic
-                        drinkware</p></div>
-                    <button type="button" className="button ghost">Edit profile</button>
+        <div className="workspace-page">
+            <PageHeading
+                title="Saved queries"
+                description="Return to questions, evidence and compliance decisions from your current and past sessions."
+                action={queries.length > 0 ? (
+                    <button type="button" className="button secondary" onClick={handleClear}>
+                        Clear history
+                    </button>
+                ) : undefined}
+            />
+            {queries.length > 0 ? (
+                <div className="saved-list">
+                    {queries.map((q, index) => (
+                        <button
+                            type="button"
+                            key={`${index}-${q.slice(0, 30)}`}
+                            onClick={() => onSelectQuery(q)}
+                        >
+                            <span className="saved-icon">
+                                <ChatTeardropDots size={19} />
+                            </span>
+                            <span className="saved-copy">
+                                <strong>{q}</strong>
+                                <small>Query #{queries.length - index} <span>•</span> Click to open in Assistant</small>
+                            </span>
+                            <CaretRight size={17} />
+                        </button>
+                    ))}
                 </div>
-                <div className="product-metrics">
-                    <div><span>Standards</span><strong>2</strong><small>relevant</small></div>
-                    <div><span>Certification</span><strong className="metric-alert">Review</strong><small>QCO
-                        check</small></div>
-                    <div><span>Tests</span><strong>6</strong><small>identified</small></div>
-                    <div><span>Laboratories</span><strong>14</strong><small>matching</small></div>
+            ) : (
+                <div className="empty-state" style={{padding: "48px 16px", textAlign: "center", color: "var(--muted)"}}>
+                    <ClockCounterClockwise size={40} weight="thin" style={{margin: "0 auto 16px", display: "block"}} />
+                    <h3 style={{fontSize: "1.1rem", marginBottom: 8, color: "var(--foreground)"}}>No saved queries yet</h3>
+                    <p style={{maxWidth: 420, margin: "0 auto 24px", fontSize: "0.9rem", lineHeight: 1.5}}>
+                        Queries asked in the Assistant are saved locally in your browser so you can revisit them anytime.
+                    </p>
+                    <button
+                        type="button"
+                        className="button primary"
+                        onClick={() => onSelectQuery(exampleQuestion)}
+                    >
+                        Try example query
+                    </button>
                 </div>
-            </div>
-            <section className="compliance-path-section">
-                <div className="section-title-row">
-                    <div><h2>Compliance path</h2><p>Each completed decision unlocks the next part of the process.</p>
-                    </div>
-                    <span className="status attention"><Warning size={15} weight="fill"/> 1 item needs review</span>
-                </div>
-                <div className="compliance-path">{steps.map((step, index) => {
-                    const StepIcon = step.icon;
-                    return <div className={`path-step ${step.state}`} key={step.label}>
-                        <div className="path-node">{step.state === "done" ? <Check size={17} weight="bold"/> :
-                            <StepIcon size={18}/>}</div>
-                        <div><strong>{step.label}</strong><span>{step.detail}</span></div>
-                        {index < steps.length - 1 && <div className="path-connector"/>}</div>;
-                })}</div>
-            </section>
-            <div className="product-detail-layout">
-                <section className="review-panel">
-                    <div className="review-panel-heading"><ShieldCheck size={24}/>
-                        <div><h3>QCO applicability needs verification</h3><p>The result depends on insulation type and
-                            the currently notified product scope.</p></div>
-                    </div>
-                    <div className="clarification-form"><label htmlFor="construction">Bottle construction</label><select
-                        id="construction" defaultValue="vacuum">
-                        <option value="vacuum">Vacuum-insulated, double-wall</option>
-                        <option value="single">Single-wall</option>
-                        <option value="other">Other construction</option>
-                    </select><small>This detail is used only to narrow the relevant standard and order.</small></div>
-                    <button type="button" className="button primary">Recheck applicability</button>
-                </section>
-                <section className="key-documents"><h3>Key documents</h3>
-                    <button type="button" onClick={() => onNavigate("standards")}><FilePdf size={20}/><span><strong>IS 17803:2022</strong><small>Recommended standard</small></span><ArrowSquareOut
-                        size={15}/></button>
-                    <button type="button"><ClipboardText size={20}/><span><strong>Product manual</strong><small>Inspection and testing</small></span><ArrowSquareOut
-                        size={15}/></button>
-                    <button type="button"><ShieldCheck size={20}/><span><strong>Quality Control Order</strong><small>Applicability source</small></span><ArrowSquareOut
-                        size={15}/></button>
-                </section>
-            </div>
+            )}
         </div>
     );
 }
 
-const standards = [
-    {
-        number: "IS 17803:2022",
-        title: "Stainless steel vacuum flask and bottle",
-        area: "Domestic products",
-        status: "Active",
-        revised: "Reaffirmed 2025",
-        match: "Best match"
-    },
-    {
-        number: "IS 14756:2022",
-        title: "Stainless steel utensils",
-        area: "Consumer goods",
-        status: "Active",
-        revised: "Revised 2022",
-        match: "Related"
-    },
-    {
-        number: "IS 10500:2012",
-        title: "Drinking water specification",
-        area: "Water quality",
-        status: "Active",
-        revised: "Amendment 4",
-        match: "Reference"
-    },
-    {
-        number: "IS 9845:1998",
-        title: "Food-contact migration testing",
-        area: "Food safety",
-        status: "Active",
-        revised: "Reaffirmed 2021",
-        match: "Related"
-    },
-];
-
-function HistoryView() {
-    const items = [
-        {question: exampleQuestion, date: "Today, 10:42", type: "Product compliance"},
-        {question: "Which tests apply to domestic electric adapters?", date: "Yesterday, 16:18", type: "Testing"},
-        {
-            question: "Find laboratories recognised for IS 302 testing in Pune.",
-            date: "2 Sep, 12:06",
-            type: "Laboratories"
-        },
-        {question: "What does a 22K916 hallmark mean?", date: "29 Aug, 09:34", type: "Hallmarking"},
-    ];
-    return <div className="workspace-page"><PageHeading title="Saved queries"
-                                                        description="Return to questions, evidence and compliance decisions you want to keep."
-                                                        action={<button type="button" className="button secondary">
-                                                            <MagnifyingGlass size={16}/> Search saved</button>}/>
-        <div className="saved-list">{items.map((item, index) => <button type="button" key={item.question}><span
-            className="saved-icon">{index === 0 ? <BookmarkSimple size={19} weight="fill"/> :
-            <ChatTeardropDots size={19}/>}</span><span
-            className="saved-copy"><strong>{item.question}</strong><small>{item.type} <span>•</span> {item.date}</small></span><CaretRight
-            size={17}/></button>)}</div>
-    </div>;
-}
-
-function DashboardView({onNavigate}: { onNavigate: (view: View) => void }) {
-    return <div className="workspace-page dashboard-page"><PageHeading title="Your compliance workspace"
-                                                                       description="Continue recent product reviews and keep important standards close."
-                                                                       action={<button type="button"
-                                                                                       className="button primary"
-                                                                                       onClick={() => onNavigate("products")}>
-                                                                           <Plus size={17}/> Add product</button>}/>
-        <section className="dashboard-products">
-            <div className="section-title-row">
-                <div><h2>My products</h2><p>Products with recent compliance activity.</p></div>
-                <button type="button" className="text-link" onClick={() => onNavigate("products")}>View all <ArrowRight
-                    size={15}/></button>
-            </div>
-            <div className="dashboard-product-list">
-                <button type="button" onClick={() => onNavigate("products")}><span
-                    className="product-monogram">SB</span><span><strong>Stainless steel bottle</strong><small>Certification review required</small></span><span
-                    className="status attention">Needs review</span><CaretRight size={16}/></button>
-                <button type="button"><span
-                    className="product-monogram alt">EA</span><span><strong>Electrical adapter</strong><small>3 standards identified</small></span><span
-                    className="status complete">On track</span><CaretRight size={16}/></button>
-            </div>
-        </section>
-        <div className="dashboard-columns">
-            <section>
-                <div className="section-title-row">
-                    <div><h2>Recent queries</h2></div>
-                </div>
-                <div className="mini-list">
-                    <button type="button">Do I need certification for a vacuum bottle?<span>Today</span></button>
-                    <button type="button">Testing for electrical adapters<span>Yesterday</span></button>
-                    <button type="button">Hallmark HUID explanation<span>29 Aug</span></button>
-                </div>
-            </section>
-            <section>
-                <div className="section-title-row">
-                    <div><h2>Saved standards</h2></div>
-                </div>
-                <div className="mini-list standards-mini">
-                    <button type="button"><strong>IS 17803:2022</strong><span>Vacuum flasks and bottles</span></button>
-                    <button type="button"><strong>IS 14756:2022</strong><span>Stainless steel utensils</span></button>
-                    <button type="button"><strong>IS 302-1:2008</strong><span>Electrical appliance safety</span>
-                    </button>
-                </div>
-            </section>
-        </div>
-    </div>;
-}
-
+type NavPayload = { standardId?: string; query?: string } | null;
 type DocumentTarget = { sourceId?: string; standardId?: string; clauseId?: string };
 
-function GenericContent({view, onNavigate, onOpenDocument}: {
+function GenericContent({
+    view,
+    navPayload,
+    onOpenDocument,
+    onSelectQuery,
+}: {
     view: View;
-    onNavigate: (view: View) => void;
+    navPayload: NavPayload;
     onOpenDocument: (target: DocumentTarget) => void;
+    onSelectQuery: (query: string) => void;
 }) {
-    if (view === "products") return <ProductsView onNavigate={onNavigate}/>;
-    if (view === "standards") return <StandardsExplorer
-        onOpenDocument={(standardId, clauseId) => onOpenDocument({standardId, clauseId})}/>;
+    if (view === "standards") {
+        return (
+            <StandardsExplorer
+                initialStandardId={navPayload?.standardId}
+                initialQuery={navPayload?.query}
+                onOpenDocument={(standardId, clauseId) => onOpenDocument({standardId, clauseId})}
+            />
+        );
+    }
     if (view === "certification") return <CertificationGuide/>;
-    if (view === "labs") return <LabsFinder/>;
+    if (view === "labs") {
+        return <LabsFinder initialQuery={navPayload?.query || navPayload?.standardId}/>;
+    }
     if (view === "hallmarking") return <HallmarkingView/>;
-    if (view === "history") return <HistoryView/>;
-    if (view === "reports") return <ReportsView/>;
-    return <DashboardView onNavigate={onNavigate}/>;
+    if (view === "history") return <HistoryView onSelectQuery={onSelectQuery}/>;
+    if (view === "reports") {
+        return <ReportsView initialStandardId={navPayload?.standardId}/>;
+    }
+    return (
+        <StandardsExplorer
+            initialStandardId={navPayload?.standardId}
+            initialQuery={navPayload?.query}
+            onOpenDocument={(standardId, clauseId) => onOpenDocument({standardId, clauseId})}
+        />
+    );
 }
 
 export function BISIntelligence() {
@@ -491,6 +512,7 @@ export function BISIntelligence() {
     const {messages, status, streamingText, pendingSources, isLoading, error, ask, stop} = useChat();
     const [screen, setScreen] = useState<"landing" | "app">("landing");
     const [view, setView] = useState<View>("assistant");
+    const [navPayload, setNavPayload] = useState<NavPayload>(null);
     const [sourceOpen, setSourceOpen] = useState(true);
     const [selectedSource, setSelectedSource] = useState<string | null>(null);
     const [documentTarget, setDocumentTarget] = useState<DocumentTarget | null>(null);
@@ -510,7 +532,7 @@ export function BISIntelligence() {
             if (requestedView && [...navItems.map((item) => item.id), "dashboard"].includes(requestedView)) {
                 setScreen("app");
                 setView(requestedView);
-                setSourceOpen(requestedView === "assistant" && window.innerWidth > 720);
+                setSourceOpen(requestedView === "assistant" && window.innerWidth > 980);
             }
         });
         return () => window.cancelAnimationFrame(frame);
@@ -519,13 +541,15 @@ export function BISIntelligence() {
     function enterAssistant(nextQuestion: string) {
         setScreen("app");
         setView("assistant");
-        setSourceOpen(window.innerWidth > 720);
+        setNavPayload(null);
+        setSourceOpen(window.innerWidth > 980);
         void ask(nextQuestion.trim() || exampleQuestion, locale);
     }
 
-    function navigate(nextView: View) {
+    function navigate(nextView: View, payload?: { standardId?: string; query?: string }) {
         setScreen("app");
         setView(nextView);
+        setNavPayload(payload ?? null);
         setMobileNavOpen(false);
         if (nextView !== "assistant") setSourceOpen(false);
     }
@@ -555,8 +579,16 @@ export function BISIntelligence() {
         <>
             {screen === "landing" ? <Landing onEnter={enterAssistant} onNavigate={navigate} onSignIn={openAuth}/> :
                 <div className="app-shell">
-                    <div className={`mobile-nav-scrim ${mobileNavOpen ? "open" : ""}`}
-                         onClick={() => setMobileNavOpen(false)}/>
+                    <div
+                        className={`mobile-nav-scrim ${mobileNavOpen ? "open" : ""}`}
+                        role="button"
+                        tabIndex={0}
+                        aria-label="Close navigation menu"
+                        onClick={() => setMobileNavOpen(false)}
+                        onKeyDown={(e) => {
+                            if (e.key === "Escape" || e.key === "Enter") setMobileNavOpen(false);
+                        }}
+                    />
                     <div className={`sidebar-wrap ${mobileNavOpen ? "mobile-open" : ""}`}><AppSidebar active={view}
                                                                                                       onChange={navigate}
                                                                                                       collapsed={sidebarCollapsed}
@@ -571,20 +603,22 @@ export function BISIntelligence() {
                                 <ChatThread messages={messages} status={status} streamingText={streamingText}
                                             isLoading={isLoading} error={error} onAsk={enterAssistant} onStop={stop}
                                             onCitation={openCitation}
-                                            onOpenView={(nextView) => navigate(nextView as View)}/> :
-                                <GenericContent view={view} onNavigate={navigate}
-                                                onOpenDocument={setDocumentTarget}/>}</main>
+                                            onOpenView={(nextView, payload) => navigate(nextView as View, payload)}/> :
+                                <GenericContent view={view} navPayload={navPayload}
+                                                onOpenDocument={setDocumentTarget}
+                                                onSelectQuery={enterAssistant}/>}</main>
                             {view === "assistant" && sourceOpen &&
                                 <EvidencePanel sources={sources} selected={activeSource} onSelect={setSelectedSource}
                                                onClose={() => setSourceOpen(false)}
                                                onOpenDocument={(source) => setDocumentTarget({sourceId: source.id})}/>}
                             {view === "assistant" && !sourceOpen && sources.length > 0 &&
                                 <button type="button" className="floating-sources-button"
-                                        onClick={() => setSourceOpen(true)}><Files size={17}/> {sources.length} {sources.length === 1 ? "source" : "sources"}
+                                        onClick={() => setSourceOpen(true)}><Files
+                                    size={17}/> {sources.length} {sources.length === 1 ? "source" : "sources"}
                                 </button>}</div>
                     </div>
                     <nav className="mobile-bottom-nav"
-                         aria-label="Mobile navigation">{[navItems[0], navItems[1], navItems[2], navItems[4]].map((item) => {
+                         aria-label="Mobile navigation">{[navItems[0], navItems[1], navItems[2], navItems[3]].map((item) => {
                         const ItemIcon = item.icon;
                         return <button type="button" key={item.id} className={view === item.id ? "active" : ""}
                                        onClick={() => navigate(item.id)}><ItemIcon size={20}
@@ -602,3 +636,4 @@ export function BISIntelligence() {
         </>
     );
 }
+

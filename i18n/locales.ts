@@ -15,3 +15,11 @@ export const LOCALE_NAMES: Record<Locale, string> = {
 export function isLocale(value: string | null | undefined): value is Locale {
   return SUPPORTED_LOCALES.includes(value as Locale);
 }
+
+export const LOCALE_TO_STT_LANG: Record<Locale, string> = {
+  en: "en-IN",
+  hi: "hi-IN",
+  ta: "ta-IN",
+  te: "te-IN",
+  kn: "kn-IN",
+};

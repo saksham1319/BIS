@@ -185,10 +185,15 @@ button.chip:hover {
     white-space: nowrap;
 }
 
-.data-table tbody th {
+.data-table tbody th,
+.data-table th[scope="row"] {
     color: var(--faint);
     font-weight: 620;
     white-space: nowrap;
+    position: sticky;
+    left: 0;
+    background: var(--surface);
+    z-index: 1;
 }
 
 .data-table tbody td {

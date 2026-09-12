@@ -2,15 +2,18 @@
 
 import {useCallback, useEffect, useRef, useState} from "react";
 import type {FormEvent, KeyboardEvent} from "react";
-import {ArrowUp, CaretDown, SealCheck, WarningCircle, X} from "@phosphor-icons/react";
+import {ArrowUp, CaretDown, Microphone, SealCheck, WarningCircle, X} from "@phosphor-icons/react";
+import {useLocale} from "next-intl";
+import type {Locale} from "@/i18n/locales";
 import type {ChatMessage} from "@/lib/bis/types";
 import {AnswerCard} from "./answer-card";
 import {RetrievalState} from "./retrieval-state";
+import {useSpeechRecognition} from "./use-speech-recognition";
 
 export const EXAMPLE_QUESTIONS = [
     "I manufacture stainless steel water bottles. Which Indian Standard applies and do I need BIS certification?",
     "Is BIS registration mandatory for a power bank sold in India?",
-    "Which labs near Pune can test a two-wheeler helmet?",
+    "Which BIS-recognised labs can test a two-wheeler helmet under IS 4151?",
     "How do I check if my gold jewellery hallmark is genuine?",
 ] as const;
 
@@ -26,7 +29,7 @@ export interface ChatThreadProps {
     onAsk: (question: string) => void;
     onStop: () => void;
     onCitation: (sourceId: string) => void;
-    onOpenView: (view: string) => void;
+    onOpenView: (view: string, payload?: { standardId?: string; query?: string }) => void;
     /** Text pushed into the composer from the outside. Syncs whenever the value changes. */
     prefill?: string;
     /** Also fired when the user taps "Add detail" on a clarifying question. */
@@ -62,13 +65,30 @@ export function ChatThread({
     prefill,
     onClarify,
 }: ChatThreadProps) {
+    const locale = (useLocale() || "en") as Locale;
+
     const [draft, setDraft] = useState(prefill ?? "");
     const [lastPrefill, setLastPrefill] = useState(prefill);
     const [atBottom, setAtBottom] = useState(true);
     const [dismissedError, setDismissedError] = useState<string | null>(null);
+    const [speechErrorDismissed, setSpeechErrorDismissed] = useState<string | null>(null);
     const [completed, setCompleted] = useState<string[]>([]);
     // Bumped whenever the composer should take focus; the effect below reacts to it.
     const [focusToken, setFocusToken] = useState(0);
+
+    const {
+        isSupported,
+        isListening,
+        error: speechError,
+        toggleListening,
+        stopListening,
+        clearError: clearSpeechError,
+    } = useSpeechRecognition({
+        locale,
+        onTranscript: (updatedDraft) => {
+            setDraft(updatedDraft);
+        },
+    });
 
     const rootRef = useRef<HTMLDivElement | null>(null);
     const scrollerRef = useRef<HTMLElement | null>(null);
@@ -76,8 +96,18 @@ export function ChatThread({
     const lastStatusRef = useRef<string | null>(null);
     const wasLoadingRef = useRef(false);
     const messageCountRef = useRef(0);
+    const prevListeningRef = useRef(false);
+
+    useEffect(() => {
+        if (prevListeningRef.current && !isListening) {
+            textareaRef.current?.focus();
+        }
+        prevListeningRef.current = isListening;
+    }, [isListening]);
 
     const visibleError = error && error !== dismissedError ? error : null;
+    const activeSpeechError = speechError && speechError !== speechErrorDismissed ? speechError : null;
+    const displayedError = visibleError || activeSpeechError;
     const isEmpty = messages.length === 0 && !isLoading;
 
     /* ---------------------------------------------------------------- scrolling */
@@ -168,10 +198,13 @@ export function ChatThread({
         (question: string) => {
             const trimmed = question.trim();
             if (!trimmed || isLoading) return;
+            if (isListening) {
+                stopListening();
+            }
             onAsk(trimmed);
             setDraft("");
         },
-        [isLoading, onAsk],
+        [isLoading, isListening, onAsk, stopListening],
     );
 
     function handleSubmit(event: FormEvent) {
@@ -188,12 +221,16 @@ export function ChatThread({
     }
 
     const handleClarify = useCallback(
-        (question: string) => {
-            setDraft(question.endsWith(" ") ? question : `${question} `);
-            setFocusToken((token) => token + 1);
-            onClarify?.(question);
+        (response: string) => {
+            if (response && response.trim().length > 0) {
+                void submitQuestion(response);
+            } else {
+                setFocusToken((token) => token + 1);
+                textareaRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+            }
+            onClarify?.(response);
         },
-        [onClarify],
+        [onClarify, submitQuestion],
     );
 
     /* -------------------------------------------------------------------- render */
@@ -264,16 +301,22 @@ export function ChatThread({
                     </button>
                 ) : null}
 
-                {visibleError ? (
+                {displayedError ? (
                     <div className="assistant-error" role="alert">
                         <WarningCircle size={18} weight="fill"/>
-                        <p>{visibleError}</p>
+                        <p>{displayedError}</p>
                         <button
                             type="button"
                             className="icon-button"
                             aria-label="Dismiss error"
                             title="Dismiss error"
-                            onClick={() => setDismissedError(error)}
+                            onClick={() => {
+                                if (visibleError && error) setDismissedError(error);
+                                if (activeSpeechError && speechError) {
+                                    setSpeechErrorDismissed(speechError);
+                                    clearSpeechError();
+                                }
+                            }}
                         >
                             <X size={15}/>
                         </button>
@@ -295,24 +338,66 @@ export function ChatThread({
                     />
                     <div className="composer-footer">
                         <div className="composer-tools">
-                            <span className="language-badge">EN</span>
-                            <span className="composer-hint">Enter to send · Shift + Enter for a new line</span>
+                            <span className="language-badge">{locale.toUpperCase()}</span>
+                            {isListening ? (
+                                <span className="composer-listening-status" aria-live="polite">
+                                    <span className="mic-listening-dot" aria-hidden="true"/>
+                                    Listening…
+                                </span>
+                            ) : (
+                                <span className="composer-hint">Enter to send · Shift + Enter for a new line</span>
+                            )}
                         </div>
-                        {isLoading ? (
+                        <div className="composer-actions">
                             <button
                                 type="button"
-                                className="send-button is-stop"
-                                onClick={onStop}
-                                aria-label="Stop generating"
-                                title="Stop generating"
+                                className={`mic-button ${isListening ? "is-listening" : ""}`}
+                                onClick={() => {
+                                    setSpeechErrorDismissed(null);
+                                    clearSpeechError();
+                                    toggleListening(draft);
+                                }}
+                                disabled={isLoading || !isSupported}
+                                aria-label={
+                                    !isSupported
+                                        ? "Voice input isn't supported in this browser"
+                                        : isListening
+                                          ? "Stop listening"
+                                          : "Start voice input"
+                                }
+                                aria-pressed={isListening}
+                                title={
+                                    !isSupported
+                                        ? "Voice input isn't supported in this browser."
+                                        : isListening
+                                          ? "Listening… Click to stop"
+                                          : "Voice input (speak to type)"
+                                }
                             >
-                                <X size={17} weight="bold"/>
+                                <Microphone size={18} weight={isListening ? "fill" : "bold"} aria-hidden="true"/>
+                                {isListening ? <span className="mic-label">Listening…</span> : null}
                             </button>
-                        ) : (
-                            <button type="submit" className="send-button" aria-label="Send question" disabled={!draft.trim()}>
-                                <ArrowUp size={19} weight="bold"/>
-                            </button>
-                        )}
+                            {isLoading ? (
+                                <button
+                                    type="button"
+                                    className="send-button is-stop"
+                                    onClick={onStop}
+                                    aria-label="Stop generating"
+                                    title="Stop generating"
+                                >
+                                    <X size={17} weight="bold"/>
+                                </button>
+                            ) : (
+                                <button
+                                    type="submit"
+                                    className="send-button"
+                                    aria-label="Send question"
+                                    disabled={!draft.trim() || isListening}
+                                >
+                                    <ArrowUp size={19} weight="bold"/>
+                                </button>
+                            )}
+                        </div>
                     </div>
                 </form>
 

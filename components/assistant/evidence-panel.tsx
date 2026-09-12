@@ -91,7 +91,7 @@ export function EvidencePanel({sources, selected, onSelect, onClose, onOpenDocum
                 <div className="evidence-empty">
                     <Files size={26}/>
                     <strong>Evidence appears here</strong>
-                    <p>Ask a question and BIS Sathi will list the standards, orders and manuals behind every claim, with the exact clause it relied on.</p>
+                    <p>Ask a question and BIS Saathi will list the standards, orders and manuals behind every claim, with the exact clause it relied on.</p>
                 </div>
             </aside>
         );
@@ -104,7 +104,7 @@ export function EvidencePanel({sources, selected, onSelect, onClose, onOpenDocum
             <div className="evidence-header">
                 <div>
                     <strong>Sources</strong>
-                    <span>{count} {count === 1 ? "source" : "sources"} verified</span>
+                    <span>{count} {count === 1 ? "source" : "sources"} cited</span>
                 </div>
                 <button type="button" className="icon-button" aria-label="Close sources" title="Close sources" onClick={onClose}>
                     <X size={18}/>
@@ -116,8 +116,10 @@ export function EvidencePanel({sources, selected, onSelect, onClose, onOpenDocum
                     <button
                         type="button"
                         role="tab"
+                        id={`source-tab-${source.id}`}
                         key={source.id}
                         aria-selected={active.id === source.id}
+                        aria-controls={`source-panel-${source.id}`}
                         aria-label={`Source ${index + 1}: ${source.number}`}
                         className={active.id === source.id ? "active" : ""}
                         onClick={() => onSelect(source.id)}
@@ -127,7 +129,12 @@ export function EvidencePanel({sources, selected, onSelect, onClose, onOpenDocum
                 ))}
             </div>
 
-            <div className="active-source">
+            <div
+                className="active-source"
+                id={`source-panel-${active.id}`}
+                role="tabpanel"
+                aria-labelledby={`source-tab-${active.id}`}
+            >
                 <div className="source-document-icon"><SourceIcon type={active.type}/></div>
                 <span className="source-type">{active.type}</span>
                 <h2>{active.number}</h2>
@@ -177,7 +184,7 @@ export function EvidencePanel({sources, selected, onSelect, onClose, onOpenDocum
                 <SealCheck size={17} weight="fill"/>
                 <p>
                     <strong>Source provenance</strong>
-                    <span>Every claim above links back to an original BIS document record.</span>
+                    <span>Every claim above links to an excerpt from the demonstration corpus. Verify against official BIS gazette notifications.</span>
                 </p>
             </div>
         </aside>

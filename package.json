@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "node --loader ./test/loader.mjs --experimental-strip-types --test test/speech-to-text.test.ts"
   },
   "dependencies": {
     "@phosphor-icons/react": "^2.1.10",

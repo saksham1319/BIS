@@ -10,6 +10,7 @@ import type {
 } from "@/lib/bis/types";
 
 import {
+  getLabById,
   getQcoById,
   getSchemeById,
   hallmarkingCentres,
@@ -284,6 +285,12 @@ function scoreLab(tokens: Token[], lab: Laboratory): number {
 }
 
 function scoreScheme(tokens: Token[], scheme: CertificationScheme): number {
+  if (scheme.id === "scheme-fmcs") {
+    const hasForeignIntent = tokens.some((t) =>
+      FOREIGN_INTENT.some((f) => t.stem.includes(f) || f.includes(t.stem)),
+    );
+    if (!hasForeignIntent) return 0;
+  }
   let score = 0;
   score += scoreText(tokens, scheme.name, 6);
   score += scoreText(tokens, scheme.summary, 2);
@@ -375,7 +382,7 @@ function labSource(lab: Laboratory): EvidenceSource {
     type: "Laboratory Record",
     title: lab.name,
     location: `${lab.city}, ${lab.state}`,
-    excerpt: `${lab.accreditation}. Recognised for ${lab.recognisedFor
+    excerpt: `BIS-recognised testing laboratory (${lab.accreditation}). Recognised by BIS for testing against: ${lab.recognisedFor
       .slice(0, 4)
       .join(", ")}. Test groups: ${lab.testGroups.join(
       ", ",
@@ -480,6 +487,18 @@ function contextBlockFor(
           .map((fee) => `${fee.label} ${fee.amount}`)
           .join("; ")} | Timeline: ${clamp(scheme.timeline, 140)}`,
       );
+      return lines.join("\n");
+    }
+  }
+
+  if (source.type === "Laboratory Record" && source.docId) {
+    const lab = getLabById(source.docId);
+    if (lab) {
+      lines.push(`Status: BIS-recognised testing laboratory | Accreditation: ${lab.accreditation}`);
+      lines.push(`Location: ${lab.city}, ${lab.state}`);
+      lines.push(`Recognised by BIS for: ${lab.recognisedFor.join(", ")}`);
+      lines.push(`Test groups: ${lab.testGroups.join(", ")}`);
+      lines.push(`Turnaround: ${lab.turnaroundDays} working days | Contact: ${lab.contact} (${lab.email})`);
       return lines.join("\n");
     }
   }
@@ -683,8 +702,8 @@ export function retrieve(
       for (const entry of scoredLabs.slice(0, LIMITS.labs)) {
         candidates.push({
           item: labSource(entry.item),
-          // Labs are supporting evidence; keep them below the governing text.
-          score: entry.score + Math.min(topScore * 0.25, 12),
+          // When the query is specifically asking for laboratories, rank matching labs prominently.
+          score: entry.score + topScore + 15,
         });
       }
     }

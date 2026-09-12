@@ -1,4 +1,4 @@
-export {useChat} from "./use-chat";
+export {useChat, STORAGE_KEY} from "./use-chat";
 export type {UseChatResult} from "./use-chat";
 
 export {AnswerCard} from "./answer-card";
@@ -12,3 +12,6 @@ export type {RetrievalStateProps} from "./retrieval-state";
 
 export {ChatThread, EXAMPLE_QUESTIONS} from "./chat-thread";
 export type {ChatThreadProps} from "./chat-thread";
+
+export {useSpeechRecognition, mergeDraft} from "./use-speech-recognition";
+export type {UseSpeechRecognitionOptions} from "./use-speech-recognition";

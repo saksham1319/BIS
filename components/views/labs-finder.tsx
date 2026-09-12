@@ -60,6 +60,11 @@ function scoreLab(lab: Laboratory, terms: string[]): number {
 
 export function LabsFinder({initialQuery = ""}: LabsFinderProps) {
     const [query, setQuery] = useState(initialQuery);
+    const [prevInitialQuery, setPrevInitialQuery] = useState(initialQuery);
+    if (initialQuery !== prevInitialQuery) {
+        setPrevInitialQuery(initialQuery);
+        setQuery(initialQuery);
+    }
     const [state, setState] = useState("all");
     const [testGroup, setTestGroup] = useState("all");
     const [sort, setSort] = useState<SortKey>("relevance");

@@ -80,9 +80,20 @@ export function StandardsExplorer({
                                   }: StandardsExplorerProps) {
     const [query, setQuery] = useState(initialQuery);
     const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
+    const [prevInitialQuery, setPrevInitialQuery] = useState(initialQuery);
+    if (initialQuery !== prevInitialQuery) {
+        setPrevInitialQuery(initialQuery);
+        setQuery(initialQuery ?? "");
+        setDebouncedQuery(initialQuery ?? "");
+    }
     const [sector, setSector] = useState("all");
     const [status, setStatus] = useState<StatusFilter>("all");
     const [selectedId, setSelectedId] = useState<string | undefined>(initialStandardId);
+    const [prevInitialStandardId, setPrevInitialStandardId] = useState(initialStandardId);
+    if (initialStandardId !== prevInitialStandardId) {
+        setPrevInitialStandardId(initialStandardId);
+        setSelectedId(initialStandardId);
+    }
 
     const searchRef = useRef<HTMLInputElement | null>(null);
     const rowRefs = useRef(new Map<string, HTMLElement>());
@@ -91,6 +102,14 @@ export function StandardsExplorer({
         const timer = window.setTimeout(() => setDebouncedQuery(query), 150);
         return () => window.clearTimeout(timer);
     }, [query]);
+
+    useEffect(() => {
+        if (initialStandardId) {
+            window.requestAnimationFrame(() => {
+                rowRefs.current.get(initialStandardId)?.scrollIntoView({behavior: "smooth", block: "center"});
+            });
+        }
+    }, [initialStandardId]);
 
     useEffect(() => {
         const onKeyDown = (event: KeyboardEvent) => {

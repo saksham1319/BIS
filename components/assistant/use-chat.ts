@@ -5,7 +5,7 @@ import type {AssistantAnswer, ChatMessage, ChatStreamEvent, EvidenceSource} from
 
 /** How many prior turns travel back to the model as `history`. */
 const HISTORY_LIMIT = 6;
-const STORAGE_KEY = "bis_saathi_chat_history";
+export const STORAGE_KEY = "bis_saathi_chat_history";
 
 const NETWORK_ERROR = "Could not reach the assistant. Check your connection and try again.";
 const EMPTY_ERROR = "The assistant did not return an answer. Please try asking again.";
@@ -40,37 +40,37 @@ function isAbort(reason: unknown): boolean {
     return typeof reason === "object" && reason !== null && (reason as {name?: unknown}).name === "AbortError";
 }
 
+function loadStoredMessages(): ChatMessage[] {
+    if (typeof window === "undefined") return [];
+    try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+                return parsed;
+            }
+        }
+    } catch {
+        /* ignore localStorage parse issues */
+    }
+    return [];
+}
+
 export function useChat(): UseChatResult {
-    const [messages, setMessages] = useState<ChatMessage[]>([]);
+    const [messages, setMessages] = useState<ChatMessage[]>(loadStoredMessages);
     const [status, setStatus] = useState<string | null>(null);
     const [streamingText, setStreamingText] = useState("");
-    const [pendingSources, setPendingSources] = useState<EvidenceSource[]>([]);
+    const [pendingSources, setPendingSources] = useState<EvidenceSource[]>(() => {
+        const initial = loadStoredMessages();
+        const lastAssistant = [...initial].reverse().find((m) => m.role === "assistant" && m.answer?.sources);
+        return lastAssistant?.answer?.sources ?? [];
+    });
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const abortRef = useRef<AbortController | null>(null);
     const loadingRef = useRef(false);
-    const messagesRef = useRef<ChatMessage[]>([]);
-
-    // Restore conversation history from localStorage on initial mount
-    useEffect(() => {
-        try {
-            const raw = typeof window !== "undefined" ? localStorage.getItem(STORAGE_KEY) : null;
-            if (raw) {
-                const parsed = JSON.parse(raw);
-                if (Array.isArray(parsed) && parsed.length > 0) {
-                    messagesRef.current = parsed;
-                    setMessages(parsed);
-                    const lastAssistant = [...parsed].reverse().find((m) => m.role === "assistant" && m.answer?.sources);
-                    if (lastAssistant?.answer?.sources) {
-                        setPendingSources(lastAssistant.answer.sources);
-                    }
-                }
-            }
-        } catch {
-            /* ignore localStorage parse issues */
-        }
-    }, []);
+    const messagesRef = useRef<ChatMessage[]>(messages);
 
     // Sync to localStorage
     useEffect(() => {

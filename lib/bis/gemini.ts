@@ -247,16 +247,6 @@ function httpError(status: number, body: string): Error {
   );
 }
 
-/** True when a 400 looks like it is complaining about `thinkingConfig`. */
-function isThinkingConfigRejection(status: number, body: string): boolean {
-  if (status !== 400) return false;
-  const lower = body.toLowerCase();
-  return (
-    lower.includes("thinking") ||
-    lower.includes("thinkingbudget") ||
-    lower.includes("thinking_config")
-  );
-}
 
 /* -------------------------------------------------------------------------- */
 /* Progressive "summary" extraction                                            */
@@ -595,7 +585,7 @@ export async function* streamAnswer(
 
   for (const model of CANDIDATE_MODELS) {
     try {
-      let res = await postToGemini(
+      const res = await postToGemini(
         key,
         buildBody(question, context, history, false, locale),
         model,

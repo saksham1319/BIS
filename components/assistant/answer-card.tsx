@@ -9,6 +9,7 @@ import {
     DownloadSimple,
     Info,
     Package,
+    Question,
     SealCheck,
     Warning,
 } from "@phosphor-icons/react";
@@ -31,7 +32,7 @@ export interface AnswerCardProps {
     /** Sources used to resolve `[n]` markers before the final answer lands. */
     sources?: EvidenceSource[];
     onCitation: (sourceId: string) => void;
-    onOpenView: (view: string) => void;
+    onOpenView: (view: string, payload?: { standardId?: string; query?: string }) => void;
     /** Called by the clarifying-question "Add detail" button so the parent can prefill the composer. */
     onClarify?: (question: string) => void;
 }
@@ -46,9 +47,9 @@ const CERTIFICATION_META: Record<CertificationStatus, {label: string; tone: stri
 const FALLBACK_CERTIFICATION = CERTIFICATION_META["check-required"];
 
 const CONFIDENCE_META: Record<Confidence, {label: string; tone: string}> = {
-    high: {label: "High confidence", tone: "complete"},
-    medium: {label: "Medium confidence", tone: "navy"},
-    low: {label: "Low confidence", tone: "attention"},
+    high: {label: "Primary match", tone: "complete"},
+    medium: {label: "Related standard", tone: "navy"},
+    low: {label: "Reference standard", tone: "attention"},
 };
 
 const FALLBACK_CONFIDENCE = CONFIDENCE_META.medium;
@@ -190,6 +191,40 @@ function StatusPill({tone, icon: PillIcon, label, filled}: {tone: string; icon?:
     );
 }
 
+/**
+ * Extracts 2 clean options from a clarifying question when formatted as "A or B?".
+ * Used to render quick-reply chips for the user.
+ */
+function extractClarifyOptions(question: string): string[] {
+    if (!question) return [];
+    const firstSentence = question.split("?")[0].trim();
+    const orIdx = firstSentence.toLowerCase().indexOf(" or ");
+    if (orIdx === -1) return [];
+
+    const left = firstSentence.slice(0, orIdx).trim();
+    const right = firstSentence.slice(orIdx + 4).trim();
+
+    const cleanLeft = left
+        .replace(/^(do\s+you\s+(make|manufacture|produce|import|sell)|is\s+this|are\s+these)\s+([a-z0-9-]+\s+)?(for\s+)?/i, "")
+        .replace(/^(is|are|do|does|can|will|would)\s+(your|the|this|these|those|they|it)\s+([a-z0-9-]+\s+)?(intended\s+for|designed\s+for|used\s+for|made\s+of|insulated\s+with|rated\s+for|for)?\s*/i, "")
+        .replace(/^(is|are|do|does|can|will|would)\s+/i, "")
+        .replace(/,\s*$/, "")
+        .trim();
+
+    const cleanRight = right
+        .replace(/^(do\s+they\s+use|do\s+you\s+use|is\s+it|are\s+they|are\s+these|for)\s+/i, "")
+        .replace(/,\s*$/, "")
+        .trim();
+
+    if (cleanLeft.length >= 3 && cleanLeft.length <= 100 && cleanRight.length >= 3 && cleanRight.length <= 100) {
+        return [
+            cleanLeft.charAt(0).toUpperCase() + cleanLeft.slice(1),
+            cleanRight.charAt(0).toUpperCase() + cleanRight.slice(1),
+        ];
+    }
+    return [];
+}
+
 export function AnswerCard({
     answer,
     streamingText = "",
@@ -237,12 +272,12 @@ export function AnswerCard({
         (product ? 1 : 0) + (primaryStandard ? 1 : 0) + (certificationMeta ? 1 : 0) + (certification?.scheme ? 1 : 0);
 
     return (
-        <article className="answer" aria-label="BIS Sathi answer">
+        <article className="answer" aria-label="BIS Saathi answer">
             <div className="answer-intro">
                 <div className="assistant-emblem"><SealCheck size={21} weight="fill"/></div>
                 <div>
                     <div className="answer-byline">
-                        BIS Sathi <span>{showCaret ? "Generating answer" : "Source-backed assessment"}</span>
+                        BIS Saathi <span>{showCaret ? "Generating answer" : "Source-backed assessment"}</span>
                     </div>
                     <div className="answer-summary" aria-live={showCaret ? "polite" : "off"}>
                         {summaryText || showCaret
@@ -361,13 +396,32 @@ export function AnswerCard({
             ) : null}
 
             {isFinal && clarifyingQuestion ? (
-                <section className="caveat">
-                    <Info size={20} weight="fill"/>
+                <section className="caveat cross-examination" aria-label="Cross-examination question">
+                    <Question size={20} weight="bold"/>
                     <div>
-                        <strong>One detail can change this result</strong>
+                        <strong>Cross-Question: Specific detail required to confirm standard</strong>
                         <p>{clarifyingQuestion}</p>
+                        {(() => {
+                            const options = extractClarifyOptions(clarifyingQuestion);
+                            if (options.length === 0) return null;
+                            return (
+                                <div className="clarify-options">
+                                    <span className="clarify-options-label">Quick select:</span>
+                                    {options.map((opt) => (
+                                        <button
+                                            type="button"
+                                            key={opt}
+                                            className="clarify-option-btn"
+                                            onClick={() => onClarify?.(opt)}
+                                        >
+                                            {opt}
+                                        </button>
+                                    ))}
+                                </div>
+                            );
+                        })()}
                     </div>
-                    <button type="button" onClick={() => onClarify?.(clarifyingQuestion)}>Add detail</button>
+                    <button type="button" onClick={() => onClarify?.("")}>Answer question</button>
                 </section>
             ) : null}
 
@@ -380,25 +434,74 @@ export function AnswerCard({
                         </div>
                     </div>
                     <ol className={`steps-${Math.min(nextSteps.length, 3)}`}>
-                        {nextSteps.map((step, index) => (
-                            <li key={`${step.title}-${index}`}>
-                                <span>{index + 1}</span>
-                                <div><strong>{step.title}</strong><small>{step.detail}</small></div>
-                            </li>
-                        ))}
+                        {nextSteps.map((step, index) => {
+                            let stepAction: (() => void) | undefined;
+                            let actionLabel: string | undefined;
+                            if (index === 0 && primaryStandard) {
+                                stepAction = () => onOpenView("standards", { standardId: primaryStandard.number });
+                                actionLabel = "View standard";
+                            } else if (index === 1 && (tests.length > 0 || primaryStandard)) {
+                                stepAction = () => onOpenView("labs", { standardId: primaryStandard?.number, query: primaryStandard?.number });
+                                actionLabel = "Find labs";
+                            } else if (index === 2) {
+                                stepAction = () => onOpenView("certification");
+                                actionLabel = "Check scheme";
+                            }
+                            return (
+                                <li key={`${step.title}-${index}`}>
+                                    <span>{index + 1}</span>
+                                    <div>
+                                        <strong>{step.title}</strong>
+                                        <small>{step.detail}</small>
+                                        {stepAction && (
+                                            <button
+                                                type="button"
+                                                className="inline-action"
+                                                style={{marginTop: 6, display: "inline-flex", alignItems: "center", gap: 4, cursor: "pointer"}}
+                                                onClick={stepAction}
+                                            >
+                                                {actionLabel} <ArrowSquareOut size={13}/>
+                                            </button>
+                                        )}
+                                    </div>
+                                </li>
+                            );
+                        })}
                     </ol>
                 </section>
             ) : null}
 
             {isFinal ? (
                 <div className="answer-actions">
-                    <button type="button" className="button primary" onClick={() => onOpenView("products")}>
-                        Save as product
-                    </button>
-                    <button type="button" className="button secondary" onClick={() => onOpenView("labs")}>
+                    {primaryStandard ? (
+                        <button
+                            type="button"
+                            className="button primary"
+                            onClick={() => onOpenView("standards", { standardId: primaryStandard.number })}
+                        >
+                            Explore {primaryStandard.number}
+                        </button>
+                    ) : (
+                        <button
+                            type="button"
+                            className="button primary"
+                            onClick={() => onOpenView("standards")}
+                        >
+                            Explore standards
+                        </button>
+                    )}
+                    <button
+                        type="button"
+                        className="button secondary"
+                        onClick={() => onOpenView("labs", { standardId: primaryStandard?.number, query: primaryStandard?.number })}
+                    >
                         Find laboratory
                     </button>
-                    <button type="button" className="button ghost" onClick={() => onOpenView("reports")}>
+                    <button
+                        type="button"
+                        className="button ghost"
+                        onClick={() => onOpenView("reports", { standardId: primaryStandard?.number })}
+                    >
                         <DownloadSimple size={17}/> Generate report
                     </button>
                     <button
